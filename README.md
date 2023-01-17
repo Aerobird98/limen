@@ -115,4 +115,4 @@ I would be glad if this could be useful for someone and as a _humble_ request, p
 
 It is distributed under the [MIT license][], a short and simple permissive license with conditions _only_ requiring **preservation of copyright and license notices**. Licensed works, modifications, and larger works may be distributed under different terms and without source code.
 
-[github]: https://github.com/Aerobird98/nox
+[github]: https://github.com/Aerobird98/limen
