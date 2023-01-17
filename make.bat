@@ -1,0 +1,1 @@
+mingw32-make CC="gcc" RM="del" NM="limen.exe" %*
