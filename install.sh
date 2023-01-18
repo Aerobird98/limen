@@ -1,2 +1,2 @@
 #!/bin/bash
-cp -i bin/limen ~/../usr/bin
+cp -i limen ~/../usr/bin
