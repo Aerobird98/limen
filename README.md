@@ -58,7 +58,7 @@ This _library_ itself and a possible _interpreter_ implementation lives on [Gith
 - Run `make` to build like _normal_.
 - Run `make clean` to clean built files.
 - Go back and copy the `<code>` at the head of this `README`.
-- Run `brainfuck <code>` to evaluate it.
+- Run `limen <code>` to evaluate it.
 
 If everithing goes well, you will see all the ASCII characters in the range of `32-127`.
 
@@ -116,3 +116,4 @@ I would be glad if this could be useful for someone and as a _humble_ request, p
 It is distributed under the [MIT license][], a short and simple permissive license with conditions _only_ requiring **preservation of copyright and license notices**. Licensed works, modifications, and larger works may be distributed under different terms and without source code.
 
 [github]: https://github.com/Aerobird98/limen
+[mit license]: https://github.com/Aerobird98/limen/license.txt
