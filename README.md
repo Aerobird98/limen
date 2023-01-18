@@ -12,13 +12,13 @@ Brainfuck is notable for its **minimalism**. At the core of the language is a mo
 
 Brainfuck uses a machine model consisting of an _infinite_ stream of one-byte values initialized to zeros, an instruction pointer and a stream pointer. The instruction pointer moves trough all the **instructions** which can be used to operate the stream pointer and interact with the stream:
 
-`+` – Increments the value at the stream pointer and _wraps around_ to 0 after reaching 127,
+`+` – Increments the value at the stream pointer. The value _wraps around_ to 0 after reaching 127,
 
-`-` – Decrements the value at the stream pointer and _wraps around_ to 127 after reaching 0,
+`-` – Decrements the value at the stream pointer. The value _wraps around_ to 127 after reaching 0,
 
 `>` – Moves the stream pointer to the next value and _grows the stream_ when needed,
 
-`<` – Moves the stream pointer to the previous value making sure it is _on the stream_,
+`<` – Moves the stream pointer to the previous value making sure it remains _inside the stream_,
 
 `.` – Outputs the value at the stream pointer as an _ASCII character_,
 

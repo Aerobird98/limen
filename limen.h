@@ -7,8 +7,11 @@
     #include <stdio.h>
 #endif
 
-#define ARRAY_MAX_CAPACITY 8
-#define ARRAY_GROW_FACTOR  2
+#define MEMORY_MAX           65535
+#define ARRAY_CAPACITY_MAX   65535
+#define ARRAY_COUNT_MAX      65535
+#define ARRAY_GROW_THRESHOLD 8
+#define ARRAY_GROW_FACTOR    2
 
 /* A generic allocation function that handles all explicit memory management.
  * It's used like so:
@@ -32,12 +35,19 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 #define ALLOCATE(type)                             (type *)reallocate(NULL, 0, sizeof(type))
 #define FREE(type, pointer)                        reallocate(pointer, sizeof(type), 0)
 #define ALLOCATE_ARRAY(type, count)                (type *)reallocate(NULL, 0, sizeof(type) * (count))
-#define GROW_CAPACITY(capacity)                    ((capacity) < ARRAY_MAX_CAPACITY ? ARRAY_MAX_CAPACITY : (capacity) * (ARRAY_GROW_FACTOR))
+#define GROW_CAPACITY(capacity)                    ((capacity) < ARRAY_GROW_THRESHOLD ? ARRAY_GROW_THRESHOLD : (capacity) * (ARRAY_GROW_FACTOR))
 #define GROW_ARRAY(type, pointer, oldCount, count) (type *)reallocate(pointer, sizeof(type) * (oldCount), sizeof(type) * (count))
 #define FREE_ARRAY(type, pointer, oldCount)        reallocate(pointer, sizeof(type) * (oldCount), 0)
 
-/* A dynamic unsigned char array implementation that uses the generic allocation function
- * trough a series of macros to grow when new values are written to it.
+/* A dynamic unsigned char array implementation that uses the generic allocation
+ * function trough a series of macros to grow when new values are written to it.
+ *
+ * NOTE: This implementation could run into issues if the count or capacity value
+ *       overflows an int. It sould be quite rare, yet consider limiting capacity
+ *       and count accounting for the occasional null byte at the end.
+ *
+ *       It would be wise to define a limit for the interpreter in terms of memory
+ *       usage. It could be defined trough common usage tests.
  */
 typedef struct sCharArray {
     int count;
@@ -59,7 +69,7 @@ typedef struct sState {
     int ipc;  // Counts where the instruction pointer is.
     int spc;  // Counts where the stream pointer is.
 
-    int brackets;  // Counts open brackets, used for both error checks and loop management.
+    int brackets;  // Open brackets count, used for error checks and loop management.
 
     CharArray out;  // Evaluated code are stored in <out>.
 } State;
