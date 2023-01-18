@@ -1,3 +1,6 @@
+#ifndef limen_h
+#define limen_h
+
 #include <stdlib.h>
 
 #ifdef DEBUG
@@ -7,6 +10,23 @@
 #define ARRAY_MAX_CAPACITY 8
 #define ARRAY_GROW_FACTOR  2
 
+/* A generic allocation function that handles all explicit memory management.
+ * It's used like so:
+ *
+ * - To allocate new memory, [memory] is NULL and [oldSize] is zero. It should
+ *   return the allocated memory or NULL on failure.
+ *
+ * - To attempt to grow an existing allocation, [memory] is the memory,
+ *   [oldSize] is its previous size, and [newSize] is the desired size.
+ *   It should return [memory] if it was able to grow it in place, or a new
+ *   pointer if it had to move it.
+ *
+ * - To shrink memory, [memory], [oldSize], and [newSize] are the same as above
+ *   but it will always return [memory].
+ *
+ * - To free memory, [memory] will be the memory to free and [newSize] and
+ *   [oldSize] will be zero. It should return NULL.
+ */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
 #define ALLOCATE(type)                             (type *)reallocate(NULL, 0, sizeof(type))
@@ -16,8 +36,8 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 #define GROW_ARRAY(type, pointer, oldCount, count) (type *)reallocate(pointer, sizeof(type) * (oldCount), sizeof(type) * (count))
 #define FREE_ARRAY(type, pointer, oldCount)        reallocate(pointer, sizeof(type) * (oldCount), 0)
 
-/* A dynamic unsigned char array implementation
- * that grows when new values are written to it.
+/* A dynamic unsigned char array implementation that uses the generic allocation function
+ * trough a series of macros to grow when new values are written to it.
  */
 typedef struct sCharArray {
     int count;
@@ -30,13 +50,15 @@ void writeCharArray(CharArray *array, unsigned char value);
 void freeCharArray(CharArray *array);
 
 typedef struct sState {
-    CharArray instructions;  // Valid Instructions read from user code.
-    CharArray stream;        // Stream for the Instructions to operate on.
+    CharArray instructions;  // Valid instructions read from user code.
+    CharArray stream;        // Stream for the instructions to operate on.
 
-    unsigned char *ip;  // Pointer pointing at the current Instruction.
-    unsigned char *sp;  // Pointer pointing at the current Value on the stream.
+    unsigned char *ip;  // Pointer pointing at the current instruction.
+    unsigned char *sp;  // Pointer pointing at the current value on the stream.
 
-    int pc;        // Counts where the Stream Pointer is.
+    int ipc;  // Counts where the instruction pointer is.
+    int spc;  // Counts where the stream pointer is.
+
     int brackets;  // Counts open brackets, used for both error checks and loop management.
 
     CharArray out;  // Evaluated code are stored in <out>.
@@ -53,5 +75,7 @@ typedef enum eEvalResult {
     EVAL_ERROR_UNKNOWN,
 } EvalResult;
 
-// Evaluate provided user code into <out>.
+/* Evaluate provided user code into <out>. */
 EvalResult eval(State *state, const unsigned char *code);
+
+#endif

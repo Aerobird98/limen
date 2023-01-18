@@ -1,6 +1,10 @@
 #include "limen.h"
 
 void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
+    /* The behavior of realloc() when the size is 0 is implementation defined. It
+     * may return a non-NULL pointer which must not be dereferenced but nevertheless
+     * should be freed. To prevent that, we avoid calling realloc() with a zero size.
+     */
     if (newSize == 0) {
         free(pointer);
         return NULL;
@@ -41,7 +45,9 @@ void initState(State *state) {
     state->ip = NULL;
     state->sp = NULL;
 
-    state->pc = 0;
+    state->ipc = 0;
+    state->spc = 0;
+
     state->brackets = 0;
 
     initCharArray(&state->out);
@@ -54,26 +60,49 @@ void freeState(State *state) {
     FREE(unsigned char, state->ip);
     FREE(unsigned char, state->sp);
 
-    state->pc = 0;
+    state->ipc = 0;
+    state->spc = 0;
+
     state->brackets = 0;
 
     freeCharArray(&state->out);
 }
 
 #if DEBUG > 0
-static void debugPrintStream(State *state) {
-    printf("%i %i ", state->stream.count, state->stream.capacity);
-    for (int i = 0; i < state->stream.count; i++) {
-        if (i == state->pc)
-            printf("[*%d]", state->stream.values[i]);
-        else
-            printf("[%d]", state->stream.values[i]);
+static void debugPrintInstructions(State *state) {
+    for (int i = 0; i < state->instructions.count; i++) {
+        fprintf(stderr, "%c", state->instructions.values[i]);
     }
-    printf("\n");
+
+    fprintf(stderr, "\n");
+
+    for (int i = 0; i < state->instructions.count; i++) {
+        if (i == state->ipc) {
+            fprintf(stderr, "%c", '^');
+        } else {
+            fprintf(stderr, "%c", '-');
+        }
+    }
+
+    fprintf(stderr, "\n");
+}
+
+static void debugPrintStream(State *state) {
+    fprintf(stderr, "%i %i ", state->stream.count, state->stream.capacity);
+    for (int i = 0; i < state->stream.count; i++) {
+        if (i == state->spc) {
+            fprintf(stderr, "[*%i]", state->stream.values[i]);
+        } else {
+            fprintf(stderr, "[%i]", state->stream.values[i]);
+        }
+    }
+
+    fprintf(stderr, "\n");
 }
 #endif
 
 EvalResult eval(State *state, const unsigned char *code) {
+    /* Compile time */
     while (*code != '\0') {
         if (*code - 127 <= 0) {
             if (*code - 32 >= 0)
@@ -126,17 +155,16 @@ EvalResult eval(State *state, const unsigned char *code) {
 
     writeCharArray(&state->instructions, '\0');
 
+    /* Run time */
     state->ip = &state->instructions.values[0];
     state->sp = &state->stream.values[0];
 
-    /*
-    for (unsigned char ch = *state->ip; ch != '\0'; state->ip++) {
-    }
-    */
+    while (*state->ip != '\0') {
+#if DEBUG >= 2
+        debugPrintInstructions(state);
+#endif
 
-    unsigned char ch;
-    while ((ch = *state->ip++) != '\0') {
-        switch (ch) {
+        switch (*state->ip) {
             case '+': {
                 *state->sp = (*state->sp + 1) & 127;
                 break;
@@ -146,8 +174,8 @@ EvalResult eval(State *state, const unsigned char *code) {
                 break;
             }
             case '>': {
-                state->pc++;
-                if (state->stream.count <= state->pc) {
+                state->spc++;
+                if (state->stream.count <= state->spc) {
                     writeCharArray(&state->stream, '\0');
                 }
 
@@ -155,8 +183,8 @@ EvalResult eval(State *state, const unsigned char *code) {
                 break;
             }
             case '<': {
-                state->pc--;
-                if (0 > state->pc) {
+                state->spc--;
+                if (0 > state->spc) {
                     return EVAL_ERROR_STACK_UNDERFLOW;
                 }
 
@@ -183,13 +211,17 @@ EvalResult eval(State *state, const unsigned char *code) {
                  *
                  * NOTE: We have to use a CharArray because we need to validate input as well as user code.
                  *       Consuming the next instruction however as an input character is fine as long as we
-                 *       validate it first at compile time.
+                 *       validate it first at compile time. In both approaches we also need to account for
+                 *       error handling: what should happen when <in> is empty or do not contain that many
+                 *       characters when we evaluate an , instruction?
                  */
                 break;
             }
             case '[': {
                 if (*state->sp == 0) {
                     state->brackets++;
+                    state->ipc++;
+                    state->ip++;
                     while (state->brackets != 0) {
                         if (*state->ip == '[') {
                             state->brackets++;
@@ -197,6 +229,7 @@ EvalResult eval(State *state, const unsigned char *code) {
                             state->brackets--;
                         }
 
+                        state->ipc++;
                         state->ip++;
                     }
                 }
@@ -204,9 +237,9 @@ EvalResult eval(State *state, const unsigned char *code) {
             }
             case ']': {
                 if (*state->sp != 0) {
-                    state->ip--;
-                    state->ip--;
                     state->brackets++;
+                    state->ipc--;
+                    state->ip--;
                     while (state->brackets != 0) {
                         if (*state->ip == ']') {
                             state->brackets++;
@@ -215,9 +248,9 @@ EvalResult eval(State *state, const unsigned char *code) {
                             state->brackets--;
                         }
 
+                        state->ipc--;
                         state->ip--;
                     }
-                    state->ip++;
                 }
                 break;
             }
@@ -226,11 +259,15 @@ EvalResult eval(State *state, const unsigned char *code) {
 #if DEBUG >= 2
         debugPrintStream(state);
 #endif
+
+        state->ipc++;
+        state->ip++;
     }
 
     writeCharArray(&state->out, '\0');
 
 #if DEBUG >= 1
+    debugPrintInstructions(state);
     debugPrintStream(state);
 #endif
 
