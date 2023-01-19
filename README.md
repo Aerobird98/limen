@@ -56,9 +56,9 @@ This _library_ itself and a possible _interpreter_ implementation lives on [Gith
 
 - Configure the `makefile` to suit your needs.
 - Run `make` to build like _normal_.
-- Run `make clean` to clean built files.
 - Go back and copy the `<code>` at the head of this `README`.
 - Run `limen <code>` to evaluate it.
+- Run `make clean` to clean built files.
 
 If everithing goes well, you will see all the ASCII characters in the range of `32-127`.
 
