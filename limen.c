@@ -66,6 +66,7 @@ void freeState(State *state) {
 
 #if DEBUG > 0
 static void debugPrintInstructions(State *state) {
+    fprintf(stderr, "%i %i ", state->instructions.count, state->instructions.capacity);
     for (int i = 0; i < state->instructions.count; i++) {
         fprintf(stderr, "%c", state->instructions.values[i]);
     }
@@ -95,13 +96,22 @@ static void debugPrintStream(State *state) {
 
     fprintf(stderr, "\n");
 }
+
+static void debugPrintResponse(State *state) {
+    fprintf(stderr, "%i %i ", state->response.count, state->response.capacity);
+    for (int i = 0; i < state->response.count; i++) {
+        fprintf(stderr, "%c", state->response.values[i]);
+    }
+
+    fprintf(stderr, "\n");
+}
 #endif
 
 EvalResult eval(State *state, const unsigned char *code) {
-    // Compile time
+    // Compile time.
     //
     // At this phase we parse user code into valid instructions. Effectively Compiling
-    // code into a run time format.
+    // code into a safe run time format.
     while (*code != '\0') {
         if (*code <= 127) {
             if (*code >= 32) {
@@ -153,10 +163,10 @@ EvalResult eval(State *state, const unsigned char *code) {
         code++;
     }
 
-    // Terminate the instructions array with a NULL character.
+    // Terminate the instructions array by writing a NULL character.
     writeCharArray(&state->instructions, '\0');
 
-    // Grow the stream by one.
+    // Grow the stream by writing a Null character.
     writeCharArray(&state->stream, '\0');
 
     // Set IP to point at the first instruction.
@@ -166,14 +176,14 @@ EvalResult eval(State *state, const unsigned char *code) {
 
     // If there are open brackets.
     if (state->brackets != 0) {
-        // Set the counter back to zero.
+        // Set the bracket counter back to zero.
         state->brackets = 0;
 
         // Error out.
         return EVAL_MISMATCHED_BRACKETS;
     }
 
-    // Run time
+    // Run time.
     //
     // At this phase we run valid instructions evaluating them into a response.
     // Effectively manipulating the stream and altering state.
@@ -183,43 +193,59 @@ EvalResult eval(State *state, const unsigned char *code) {
 #endif
 
         switch (*state->ip) {
-            // Increment the value at the stream pointer. Ensure that the value wraps
-            // around to 0 after reaching 127.
+            // Increment the value at the stream pointer.
             case '+': {
+                // Ensure that the value wraps around to zero after reaching 127.
                 *state->sp = (*state->sp + 1) & 127;
                 break;
             }
-            // Decrement the value at the stream pointer. Ensure that the value wraps
-            // around to 127 after reaching 0.
+            // Decrement the value at the stream pointer.
             case '-': {
+                // Ensure that the value wraps around to 127 after reaching zero.
                 *state->sp = (*state->sp - 1) & 127;
                 break;
             }
-            // Moves the stream pointer to the next value.
+            // Move the stream pointer to the next value.
             case '>': {
+                // Increment the stream counter.
                 state->spc++;
 
+                // If we moved outside the stream.
                 if (state->stream.count <= state->spc) {
+                    // Grow the stream by writing a Null character.
                     writeCharArray(&state->stream, '\0');
                 }
 
+                // Move the stream pointer forward on the stream.
                 state->sp++;
                 break;
             }
-            // Moves the stream pointer to the previous value.
+            // Move the stream pointer to the previous value.
             case '<': {
+                // Decrement the stream counter.
                 state->spc--;
 
+                // If we moved outside the stream.
                 if (0 > state->spc) {
-                    state->spc++;
+                    // // Set the stream counter back to zero.
+                    state->spc = 0;
+
+                    // Error out.
                     return EVAL_ERROR_STACK_UNDERFLOW;
                 }
 
+                // Move the stream pointer backward on the stream.
                 state->sp--;
                 break;
             }
+            // Write the value at the stream pointer into the response array.
             case '.': {
                 writeCharArray(&state->response, *state->sp);
+
+#if DEBUG >= 1
+                debugPrintResponse(state);
+#endif
+
                 break;
             }
             case ',': {
@@ -254,40 +280,64 @@ EvalResult eval(State *state, const unsigned char *code) {
                 //        worry about it at run time!
                 break;
             }
+            // Jumps to the matching ].
             case '[': {
+                // If the value at the stream pointer is zero.
                 if (*state->sp == 0) {
+                    // Move past the ] instruction.
+                    // Increment the instruction counter.
                     state->ipc++;
+                    // Move the instruction pointer forward.
                     state->ip++;
 
+                    // Increment the brackets counter.
                     state->brackets++;
+                    // Move the instruction pointer forward until the brackets counter becomes zero.
                     while (state->brackets != 0) {
-                        if (*state->ip == '[') {
+                        if (*state->ip == '[') {  // If the current instruction is a [.
+                            // Increment the brackets counter.
                             state->brackets++;
-                        } else if (*state->ip == ']') {
+                        } else if (*state->ip == ']') {  // If the current instruction is a ].
+                            // Decrement the brackets counter.
                             state->brackets--;
                         }
 
+                        // Increment the instruction counter.
                         state->ipc++;
+                        // Move the instruction pointer forward.
                         state->ip++;
                     }
                 }
                 break;
             }
+            // Jumps to the matching [.
             case ']': {
+                // If the value at the stream pointer is not zero.
                 if (*state->sp != 0) {
+                    // Move before the [ instruction.
+                    // Deccrement the instruction counter.
                     state->ipc--;
+                    // Move the instruction pointer backward.
                     state->ip--;
 
+                    // Increment the brackets counter.
                     state->brackets++;
+                    // Move the instruction pointer backward until the brackets counter becomes
+                    // zero.
                     while (state->brackets != 0) {
+                        // If the current instruction is a ].
                         if (*state->ip == ']') {
+                            // Increment the instruction counter.
                             state->brackets++;
 
                         } else if (*state->ip == '[') {
+                            // If the current instruction is a [. Decrement the brackets counter.
                             state->brackets--;
                         }
 
+                        // Decrement the instruction counter.
                         state->ipc--;
+                        // Move the instruction pointer backward.
                         state->ip--;
                     }
                 }
@@ -299,11 +349,13 @@ EvalResult eval(State *state, const unsigned char *code) {
         debugPrintStream(state);
 #endif
 
+        // Increment the instruction counter.
         state->ipc++;
+        // Move the instruction pointer to the next instruction.
         state->ip++;
     }
 
-    // Terminate the response array with a NULL character.
+    // Terminate the response array by writing a NULL character.
     writeCharArray(&state->response, '\0');
 
 #if DEBUG >= 1
@@ -311,5 +363,6 @@ EvalResult eval(State *state, const unsigned char *code) {
     debugPrintStream(state);
 #endif
 
+    // Evaluation was successfull.
     return EVAL_OK;
 }

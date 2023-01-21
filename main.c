@@ -19,7 +19,6 @@ static void printState(State *state) {
 
     fprintf(stderr, "\n");
 
-    fprintf(stderr, "%i %i ", state->stream.count, state->stream.capacity);
     for (int i = 0; i < state->stream.count; i++) {
         if (i == state->spc) {
             fprintf(stderr, "[*%i]", state->stream.values[i]);
@@ -43,7 +42,8 @@ int main(int argc, const char *argv[]) {
     initState(&state);
 
     // TODO: As of now we cannot run eval twice on the same state. We would need to reinitialize the
-    //       instructions and response CharArrays in order to be able to.
+    //       instructions and response CharArrays in order to be able to, but afer evaluation we
+    //       need them for state visualization.
     EvalResult result = eval(&state, (const unsigned char *)argv[1]);
 
     switch (result) {
@@ -70,11 +70,6 @@ int main(int argc, const char *argv[]) {
             return 69;  // EX_UNAVAILABLE:  Something did not work and do not know why.
         }
     }
-
-    /* Explicit cast because size_t has different sizes on 32-bit and 64-bit and
-     * we need a consistent type for the format string.
-     */
-    // fprintf(stdout, "State used %lu bytes.\n", (unsigned long)sizeof(state));
 
     freeState(&state);
 
