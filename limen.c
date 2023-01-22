@@ -193,6 +193,7 @@ EvalResult eval(State *state, const unsigned char *code) {
         debugPrintInstructions(state);
 #endif
 
+        // Based on the current instruction.
         switch (*state->ip) {
             // Increment the value at the stream pointer.
             case '+': {
@@ -259,8 +260,13 @@ EvalResult eval(State *state, const unsigned char *code) {
                 //
                 //- Use an <in> CharArray, like <response> which could be initialized
                 //  trough eval itself like the users code. It should be optional
-                //  tough. It require us to provide the input alongside user code
-                //  in the exact same order of the , instructions found in the code.
+                //  tough. It could require us to provide the input alongside user code
+                //  in the exact same order of the , instructions found in the user code. The
+                //  solution is to count characters in the <in> CharArray at compile time then
+                //  decrement the counter after every , instruction found in user code. If the
+                //  counter is not equals zero, error out before run time. How to handle that in the
+                //  REPL? With this route, we need to provide input before evaluation. For the
+                //  command-line is fine tough.
                 //
                 //- Just consume the next instruction after this one. It goes well
                 //  with the REPL.
@@ -274,11 +280,10 @@ EvalResult eval(State *state, const unsigned char *code) {
                 //      - What should happen when <in> is empty or do not contain that
                 //        many characters when we evaluate an , instruction?
                 //
-                //      - What happens when , is the last valid instruction found in the
-                //        users code? Consume the NULL character? No, that would be
-                //        horrible! if the next character is the NULL one, that should be
-                //        an error which could be detected at compile time. We should not
-                //        worry about it at run time!
+                //      - What happens when , is the last valid instruction found in user code?
+                //        Consume the NULL character? No, that would be horrible! if the next
+                //        character is the NULL one, that should be an error which could be detected
+                //        at compile time. We should not worry about it at run time!
                 break;
             }
             // Jumps to the matching ].
@@ -291,9 +296,10 @@ EvalResult eval(State *state, const unsigned char *code) {
                     // Move the instruction pointer forward.
                     state->ip++;
 
+                    // Skip every instruction until we reach the matching ] instruction.
                     // Increment the brackets counter.
                     state->brackets++;
-                    // Move the instruction pointer forward until the brackets counter becomes zero.
+                    // Move the instruction pointer forward while the brackets counter is not zero.
                     while (state->brackets != 0) {
                         if (*state->ip == '[') {  // If the current instruction is a [.
                             // Increment the brackets counter.
@@ -316,15 +322,15 @@ EvalResult eval(State *state, const unsigned char *code) {
                 // If the value at the stream pointer is not zero.
                 if (*state->sp != 0) {
                     // Move before the [ instruction.
-                    // Deccrement the instruction counter.
+                    // Decrement the instruction counter.
                     state->ipc--;
                     // Move the instruction pointer backward.
                     state->ip--;
 
+                    // Skip every instruction until we reach the matching [ instruction.
                     // Increment the brackets counter.
                     state->brackets++;
-                    // Move the instruction pointer backward until the brackets counter becomes
-                    // zero.
+                    // Move the instruction pointer backward while the brackets counter is not zero.
                     while (state->brackets != 0) {
                         // If the current instruction is a ].
                         if (*state->ip == ']') {
