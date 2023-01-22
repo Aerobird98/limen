@@ -73,6 +73,7 @@ static void debugPrintInstructions(State *state) {
 
     fprintf(stderr, "\n");
 
+    fprintf(stderr, "%i %i ", state->instructions.count, state->instructions.capacity);
     for (int i = 0; i < state->instructions.count; i++) {
         if (i == state->ipc) {
             fprintf(stderr, "%c", '^');
