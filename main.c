@@ -60,8 +60,8 @@ int main(int argc, const char *argv[]) {
             fprintf(stderr, "Error: Unknown character.\n");
             return 65;  // EX_DATAERR: The input data was incorrect.
         }
-        case EVAL_ERROR_STACK_UNDERFLOW: {
-            fprintf(stderr, "Error: Stack underflow.\n");
+        case EVAL_ERROR_STREAM_UNDERFLOW: {
+            fprintf(stderr, "Error: Stream underflow.\n");
             printState(&state);
             return 70;  // EX_SOFTWARE: An internal software error has been detected.
         }

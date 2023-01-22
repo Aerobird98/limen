@@ -232,7 +232,7 @@ EvalResult eval(State *state, const unsigned char *code) {
                     state->spc = 0;
 
                     // Error out.
-                    return EVAL_ERROR_STACK_UNDERFLOW;
+                    return EVAL_ERROR_STREAM_UNDERFLOW;
                 }
 
                 // Move the stream pointer backward on the stream.
@@ -298,8 +298,8 @@ EvalResult eval(State *state, const unsigned char *code) {
                         if (*state->ip == '[') {  // If the current instruction is a [.
                             // Increment the brackets counter.
                             state->brackets++;
-                        } else if (*state->ip == ']') {  // If the current instruction is a ].
-                            // Decrement the brackets counter.
+                        } else if (*state->ip == ']') {
+                            // If the current instruction is a ]. Decrement the brackets counter.
                             state->brackets--;
                         }
 
@@ -328,7 +328,7 @@ EvalResult eval(State *state, const unsigned char *code) {
                     while (state->brackets != 0) {
                         // If the current instruction is a ].
                         if (*state->ip == ']') {
-                            // Increment the instruction counter.
+                            // Increment the brackets counter.
                             state->brackets++;
 
                         } else if (*state->ip == '[') {
