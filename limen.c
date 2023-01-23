@@ -301,7 +301,8 @@ EvalResult eval(State *state, const unsigned char *code) {
                     state->brackets++;
                     // Move the instruction pointer forward while the brackets counter is not zero.
                     while (state->brackets != 0) {
-                        if (*state->ip == '[') {  // If the current instruction is a [.
+                        // If the current instruction is a [.
+                        if (*state->ip == '[') {
                             // Increment the brackets counter.
                             state->brackets++;
                         } else if (*state->ip == ']') {
