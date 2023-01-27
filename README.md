@@ -18,7 +18,7 @@ Brainfuck uses a machine model consisting of an _infinite_ stream of one-byte va
 
 `>` – Moves the stream pointer to the next value and _grows the stream_ when needed,
 
-`<` – Moves the stream pointer to the previous value making sure it remains _inside the stream_,
+`<` – Moves the stream pointer to the previous value making sure it remains _on the stream_,
 
 `.` – Outputs the value at the stream pointer as an _ASCII character_,
 
