@@ -1,3 +1,25 @@
+// This file is part of limen which is distributed under the terms of the MIT License
+//
+// Copyright (c) 2023 Ádám Török, Aerobird98
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #ifndef limen_h
 #define limen_h
 
@@ -7,6 +29,9 @@
     #include <stdio.h>
 #endif
 
+// NOTE: These could be good default values, consider exposing these trough a config struct passed
+//       to state on initialization to allow for per state user configuration.
+#define VALUE_MAX            127
 #define MEMORY_MAX           65535
 #define ARRAY_CAPACITY_MAX   32767
 #define ARRAY_COUNT_MAX      30000
@@ -63,40 +88,43 @@ void initCharArray(CharArray *array);
 void writeCharArray(CharArray *array, unsigned char value);
 void freeCharArray(CharArray *array);
 
-// The state contains useful informations about the state of the interpreter.
+// Store informations between evaluations.
 //
-// This sould only be modified trough the provided library functions. Otherwise
-// should be read-only!
+// This shold be read-only and sould only be modified trough the provided library functions.
 //
-// NOTE: It would be wise to define a limit for any given state in terms of
-//       memory usage. A reasonable maximum could be defined trough usage tests.
+// NOTE: It would be wise to limit the memory usage of any given state. A reasonable maximum could
+//       be defined based on usage tests.
 typedef struct sState {
+    CharArray prompt;        // Validated prompt read from user data.
     CharArray instructions;  // Validated instructions read from user code.
-    CharArray stream;        // Stream for the instructions to operate on.
+    CharArray stream;        // Stream for the validated instructions to operate on.
+    CharArray response;      // Response of the validated instructions.
 
+    unsigned char *pp;  // Pointer pointing at the current value in the prompt.
     unsigned char *ip;  // Pointer pointing at the current instruction.
     unsigned char *sp;  // Pointer pointing at the current value on the stream.
 
+    int ppc;  // Counts where the prompt pointer is.
     int ipc;  // Counts where the instruction pointer is.
     int spc;  // Counts where the stream pointer is.
 
-    int brackets;  // Open brackets count for error checks and loop management.
+    int brackets;  // Mismatched bracket count for error checks and loop management.
+    int commas;    // Mismatched comma count for error checks.
 
-    CharArray response;  // Response of the validated instructions.
 } State;
 
 void initState(State *state);
 void freeState(State *state);
 
-typedef enum eEvalResult {
-    EVAL_OK,
-    EVAL_MISMATCHED_BRACKETS,
-    EVAL_ERROR_UNKNOWN_CHARACTER,
-    EVAL_ERROR_STREAM_UNDERFLOW,
-    EVAL_ERROR_UNKNOWN,
-} EvalResult;
+typedef enum eResult {
+    RESULT_OK,
+    RESULT_ERROR_MISMATCHED_COMMAS,
+    RESULT_ERROR_MISMATCHED_BRACKETS,
+    RESULT_ERROR_STREAM_UNDERFLOW,
+    RESULT_ERROR_UNKNOWN,
+} Result;
 
-// Evaluate provided user code into a response stored in state.
-EvalResult eval(State *state, const unsigned char *code);
+// Evaluate provided user code into a response.
+Result eval(State *state, const unsigned char *code, const unsigned char *data);
 
 #endif

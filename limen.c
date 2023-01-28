@@ -1,3 +1,25 @@
+// This file is part of limen which is distributed under the terms of the MIT License
+//
+// Copyright (c) 2023 Ádám Török, Aerobird98
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include "limen.h"
 
 void *reallocate(void *memory, size_t was, size_t will) {
@@ -14,6 +36,7 @@ void *reallocate(void *memory, size_t was, size_t will) {
 
 void initCharArray(CharArray *array) {
     array->values = NULL;
+
     array->capacity = 0;
     array->count = 0;
 }
@@ -31,49 +54,61 @@ void writeCharArray(CharArray *array, unsigned char value) {
 
 void freeCharArray(CharArray *array) {
     FREE_ARRAY(unsigned char, array->values, array->capacity);
-    initCharArray(array);
+
+    array->values = NULL;
+
+    array->capacity = 0;
+    array->count = 0;
 }
 
 void initState(State *state) {
+    initCharArray(&state->prompt);
     initCharArray(&state->instructions);
     initCharArray(&state->stream);
+    initCharArray(&state->response);
 
+    state->pp = NULL;
     state->ip = NULL;
     state->sp = NULL;
 
+    state->ppc = 0;
     state->ipc = 0;
     state->spc = 0;
 
     state->brackets = 0;
-
-    initCharArray(&state->response);
+    state->commas = 0;
 }
 
 void freeState(State *state) {
+    freeCharArray(&state->prompt);
     freeCharArray(&state->instructions);
     freeCharArray(&state->stream);
+    freeCharArray(&state->response);
 
+    FREE(unsigned char, state->pp);
     FREE(unsigned char, state->ip);
     FREE(unsigned char, state->sp);
 
+    state->pp = NULL;
+    state->ip = NULL;
+    state->sp = NULL;
+
+    state->ppc = 0;
     state->ipc = 0;
     state->spc = 0;
 
     state->brackets = 0;
-
-    freeCharArray(&state->response);
+    state->commas = 0;
 }
 
 #if DEBUG > 0
 static void debugPrintInstructions(State *state) {
-    fprintf(stderr, "%i %i ", state->instructions.count, state->instructions.capacity);
     for (int i = 0; i < state->instructions.count; i++) {
         fprintf(stderr, "%c", state->instructions.values[i]);
     }
 
-    fprintf(stderr, "\n");
+    fprintf(stderr, " %i %i\n", state->instructions.count, state->instructions.capacity);
 
-    fprintf(stderr, "%i %i ", state->instructions.count, state->instructions.capacity);
     for (int i = 0; i < state->instructions.count; i++) {
         if (i == state->ipc) {
             fprintf(stderr, "%c", '^');
@@ -86,7 +121,6 @@ static void debugPrintInstructions(State *state) {
 }
 
 static void debugPrintStream(State *state) {
-    fprintf(stderr, "%i %i ", state->stream.count, state->stream.capacity);
     for (int i = 0; i < state->stream.count; i++) {
         if (i == state->spc) {
             fprintf(stderr, "[*%i]", state->stream.values[i]);
@@ -95,69 +129,83 @@ static void debugPrintStream(State *state) {
         }
     }
 
-    fprintf(stderr, "\n");
+    fprintf(stderr, " %i %i\n", state->stream.count, state->stream.capacity);
 }
 
 static void debugPrintResponse(State *state) {
-    fprintf(stderr, "%i %i ", state->response.count, state->response.capacity);
     for (int i = 0; i < state->response.count; i++) {
         fprintf(stderr, "%c", state->response.values[i]);
     }
 
-    fprintf(stderr, "\n");
+    fprintf(stderr, " %i %i\n", state->response.count, state->response.capacity);
 }
 #endif
 
-EvalResult eval(State *state, const unsigned char *code) {
-    // Compile time.
+Result eval(State *state, const unsigned char *code, const unsigned char *data) {
+    // Parse-Compile-time.
     //
-    // At this phase we parse user code into valid instructions. Effectively Compiling
-    // code into a safe run time format.
+    // At this phase we parse user code into validated instructions. Effectively Compiling code into
+    // a safe-to-run run-time representation.
+
+    while (*data != '\0') {
+        // Skip non ASCII characters.
+        if (*data <= 127 && *data >= 32) {
+            // Increment the comma counter.
+            state->commas++;
+            writeCharArray(&state->prompt, *data);
+        }
+
+        // Step one character.
+        data++;
+    }
+
+    // Terminate the prompt array by writing a NULL character.
+    writeCharArray(&state->prompt, '\0');
+
     while (*code != '\0') {
-        if (*code <= 127) {
-            if (*code >= 32) {
-                // Skip every character besides the eight instructions.
-                switch (*code) {
-                    case '+': {
-                        writeCharArray(&state->instructions, '+');
-                        break;
-                    }
-                    case '-': {
-                        writeCharArray(&state->instructions, '-');
-                        break;
-                    }
-                    case '>': {
-                        writeCharArray(&state->instructions, '>');
-                        break;
-                    }
-                    case '<': {
-                        writeCharArray(&state->instructions, '<');
-                        break;
-                    }
-                    case '.': {
-                        writeCharArray(&state->instructions, '.');
-                        break;
-                    }
-                    case ',': {
-                        writeCharArray(&state->instructions, ',');
-                        break;
-                    }
-                    case '[': {
-                        state->brackets++;
-                        writeCharArray(&state->instructions, '[');
-                        break;
-                    }
-                    case ']': {
-                        state->brackets--;
-                        writeCharArray(&state->instructions, ']');
-                        break;
-                    }
+        // Skip non ASCII characters.
+        if (*code <= 127 && *code >= 32) {
+            // Skip every character besides the eight instructions.
+            switch (*code) {
+                case '+': {
+                    writeCharArray(&state->instructions, '+');
+                    break;
+                }
+                case '-': {
+                    writeCharArray(&state->instructions, '-');
+                    break;
+                }
+                case '>': {
+                    writeCharArray(&state->instructions, '>');
+                    break;
+                }
+                case '<': {
+                    writeCharArray(&state->instructions, '<');
+                    break;
+                }
+                case '.': {
+                    writeCharArray(&state->instructions, '.');
+                    break;
+                }
+                case ',': {
+                    // Decrement the comma counter.
+                    state->commas--;
+                    writeCharArray(&state->instructions, ',');
+                    break;
+                }
+                case '[': {
+                    // Increment the bracket counter.
+                    state->brackets++;
+                    writeCharArray(&state->instructions, '[');
+                    break;
+                }
+                case ']': {
+                    // Decrement the bracket counter.
+                    state->brackets--;
+                    writeCharArray(&state->instructions, ']');
+                    break;
                 }
             }
-
-        } else {
-            // Error out on none ASCII characters.
-            return EVAL_ERROR_UNKNOWN_CHARACTER;
         }
 
         // Step one character.
@@ -170,24 +218,37 @@ EvalResult eval(State *state, const unsigned char *code) {
     // Grow the stream by writing a Null character.
     writeCharArray(&state->stream, '\0');
 
+    // Set PP to point at the first value in the prompt.
+    state->pp = &state->prompt.values[0];
     // Set IP to point at the first instruction.
     state->ip = &state->instructions.values[0];
     // Set SP to point at the first value on the stream.
     state->sp = &state->stream.values[0];
 
-    // If there are open brackets.
+    // If there are mismatched commas.
+    if (state->commas != 0) {
+        // Set the comma counter back to zero.
+        state->commas = 0;
+
+        // Error out.
+        return RESULT_ERROR_MISMATCHED_COMMAS;
+    }
+
+    // If there are mismatched brackets.
     if (state->brackets != 0) {
         // Set the bracket counter back to zero.
         state->brackets = 0;
 
         // Error out.
-        return EVAL_MISMATCHED_BRACKETS;
+        return RESULT_ERROR_MISMATCHED_BRACKETS;
     }
 
-    // Run time.
+    // Run-time.
     //
-    // At this phase we run valid instructions evaluating them into a response.
+    // At this phase we run validated instructions evaluating them into a response.
     // Effectively manipulating the stream and altering state.
+
+    // Run isntructions while IP is not pointing at the NULL character.
     while (*state->ip != '\0') {
 #if DEBUG >= 1
         debugPrintInstructions(state);
@@ -197,14 +258,14 @@ EvalResult eval(State *state, const unsigned char *code) {
         switch (*state->ip) {
             // Increment the value at the stream pointer.
             case '+': {
-                // Ensure that the value wraps around to zero after reaching 127.
-                *state->sp = (*state->sp + 1) & 127;
+                // Ensure that the value wraps around to zero after reaching its maximum.
+                *state->sp = (*state->sp + 1) & VALUE_MAX;
                 break;
             }
             // Decrement the value at the stream pointer.
             case '-': {
-                // Ensure that the value wraps around to 127 after reaching zero.
-                *state->sp = (*state->sp - 1) & 127;
+                // Ensure that the value wraps around to its maximum after reaching zero.
+                *state->sp = (*state->sp - 1) & VALUE_MAX;
                 break;
             }
             // Move the stream pointer to the next value.
@@ -233,7 +294,7 @@ EvalResult eval(State *state, const unsigned char *code) {
                     state->spc = 0;
 
                     // Error out.
-                    return EVAL_ERROR_STREAM_UNDERFLOW;
+                    return RESULT_ERROR_STREAM_UNDERFLOW;
                 }
 
                 // Move the stream pointer backward on the stream.
@@ -250,63 +311,35 @@ EvalResult eval(State *state, const unsigned char *code) {
 
                 break;
             }
+            // Set the value at the stream pointer to the value at the prompt pointer.
             case ',': {
-                // TODO: Implement this properly.
-                //
-                // As for the time being, this instruction is not as widely used,
-                // so its absence will not be a problem.
-                //
-                // I could think of two possible ways to tackle this:
-                //
-                //- Use an <in> CharArray, like <response> which could be initialized
-                //  trough eval itself like the users code. It should be optional
-                //  tough. It could require us to provide the input alongside user code
-                //  in the exact same order of the , instructions found in the user code. The
-                //  solution is to count characters in the <in> CharArray at compile time then
-                //  decrement the counter after every , instruction found in user code. If the
-                //  counter is not equals zero, error out before run time. How to handle that in the
-                //  REPL? With this route, we need to provide input before evaluation. For the
-                //  command-line is fine tough.
-                //
-                //- Just consume the next instruction after this one. It goes well
-                //  with the REPL.
-                //
-                // NOTE: We have to use a CharArray because we need to validate input
-                //      as well as user code. Consuming the next instruction however
-                //      as an input character is fine as long as we validate it first
-                //      at compile time. In both approaches we also need to account for
-                //      error handling:
-                //
-                //      - What should happen when <in> is empty or do not contain that
-                //        many characters when we evaluate an , instruction?
-                //
-                //      - What happens when , is the last valid instruction found in user code?
-                //        Consume the NULL character? No, that would be horrible! if the next
-                //        character is the NULL one, that should be an error which could be detected
-                //        at compile time. We should not worry about it at run time!
+                *state->sp = *state->pp;
+                // Increment the prompt counter.
+                state->ppc++;
+                // Move the prompt pointer forward.
+                state->pp++;
                 break;
             }
             // Jumps to the matching ].
             case '[': {
                 // If the value at the stream pointer is zero.
                 if (*state->sp == 0) {
-                    // Move past the ] instruction.
                     // Increment the instruction counter.
                     state->ipc++;
-                    // Move the instruction pointer forward.
+                    // Move the instruction pointer forward past the ] instruction.
                     state->ip++;
 
-                    // Skip every instruction until we reach the matching ] instruction.
-                    // Increment the brackets counter.
+                    // Increment the bracket counter.
                     state->brackets++;
                     // Move the instruction pointer forward while the brackets counter is not zero.
+                    // Skip every instruction until we reach the matching ] instruction.
                     while (state->brackets != 0) {
                         // If the current instruction is a [.
                         if (*state->ip == '[') {
-                            // Increment the brackets counter.
+                            // Increment the bracket counter.
                             state->brackets++;
                         } else if (*state->ip == ']') {
-                            // If the current instruction is a ]. Decrement the brackets counter.
+                            // If the current instruction is a ]. Decrement the bracket counter.
                             state->brackets--;
                         }
 
@@ -322,24 +355,23 @@ EvalResult eval(State *state, const unsigned char *code) {
             case ']': {
                 // If the value at the stream pointer is not zero.
                 if (*state->sp != 0) {
-                    // Move before the [ instruction.
                     // Decrement the instruction counter.
                     state->ipc--;
-                    // Move the instruction pointer backward.
+                    // Move the instruction pointer backward before the [ instruction.
                     state->ip--;
 
-                    // Skip every instruction until we reach the matching [ instruction.
-                    // Increment the brackets counter.
+                    // Increment the bracket counter.
                     state->brackets++;
                     // Move the instruction pointer backward while the brackets counter is not zero.
+                    // Skip every instruction until we reach the matching [ instruction.
                     while (state->brackets != 0) {
                         // If the current instruction is a ].
                         if (*state->ip == ']') {
-                            // Increment the brackets counter.
+                            // Increment the bracket counter.
                             state->brackets++;
 
                         } else if (*state->ip == '[') {
-                            // If the current instruction is a [. Decrement the brackets counter.
+                            // If the current instruction is a [. Decrement the bracket counter.
                             state->brackets--;
                         }
 
@@ -372,5 +404,5 @@ EvalResult eval(State *state, const unsigned char *code) {
 #endif
 
     // Evaluation was successfull.
-    return EVAL_OK;
+    return RESULT_OK;
 }

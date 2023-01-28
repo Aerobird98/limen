@@ -38,7 +38,7 @@ This implementation is written ex nihilo and stands for a compact, secure and re
 
 - **It’s secure and reliable.** – Memory use is dynamic and strictly contained. The core uses zero static data and it does not leak memory with reliable and user-friendly error handling mechanisms in place.
 
-- **It’s fast and efficient.** – The implementation splits evaluation into compile time and run time; it does all the validation and optimization at compile time while at run time only checks for memory- and stream management errors.
+- **It’s fast and efficient.** – The implementation splits evaluation into parse-compile- and run time; it does all the validation and optimization at parse-compile- while at run time only checks for memory- and stream management errors.
 
 - **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason while Brainfuck exists in the first place.
 
@@ -46,13 +46,38 @@ This implementation is **encoding agnostic**, user code is validated to only con
 
 ## Embeding
 
-This implementation made to be **embedable**, implemented as a small C _library_ consisting of a named `.c` and `.h` file; written in ANSI C with **NO** dependencies other than a few C standard library functions, _realloc_ and _free_.
+This implementation made to be **embedable**, implemented as a small C _library_ consisting of a named `.c` and `.h` file; written in ANSI C with **NO** dependencies other than a _few_ C standard library functions, _realloc_ and _free_.
 
-You only need two files to include in your program, a named `.c` file and `.h` file. Copy those and you are good to go. :) Import the `.h` file to access the implementation. For a usage sample, consult with the `main.c` file which contains the command-line- and REPL implementations of a possible interpreter as well.
+You only need two files to include in your program, a named `.c` file and `.h` file. Copy those and you are good to go. Import the `.h` file to access the implementation.
+
+In its most simple form you only need to:
+
+```c
+// Declare state.
+State state;
+
+// Initialize state.
+initState(&state);
+
+// Run eval on a piece of code, manipulating state and returning a result.
+Result result = eval(&state, "++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]", "");
+
+// Handle result, visualize state, etc.
+if (result == RESULT_OK) {
+    fprintf(stdout, "%s\n", state.response.out);
+} else {
+    fprintf(stderr, "Error: Unhandled error.");
+}
+
+// Free state.
+freeState(&state);
+```
+
+For a more complete usage example, consult with the `main.c` file which contains the command-line- and REPL implementations of a possible interpreter.
 
 ## Compile & Conquer
 
-This _library_ itself and a possible _interpreter_ implementation lives on [Github](). To play around with it, sync it down then:
+Limen lives on [Github](). To play around with it, sync it down then:
 
 - Configure the `makefile` to suit your needs.
 - Run `make` to build like _normal_.
@@ -109,11 +134,13 @@ Without *argument*s, it drops you into a **REPL** — an interactive session. Yo
 
 This repository is mostly read-only. I’m not a full-time developer just a hobbist, but if you like this lil’ implementation and want to improve upon things here, please don’t hesitate to **file an issue** or **open a pull-request**.
 
-I would be glad if this could be useful for someone and as a _humble_ request, please **mention my name and link back to this repository** if you ever use this in any of your own implementations.
+I would be glad if this could be useful for someone.
 
 # License
 
 It is distributed under the [MIT license][], a short and simple permissive license with conditions _only_ requiring **preservation of copyright and license notices**. Licensed works, modifications, and larger works may be distributed under different terms and without source code.
+
+As a _humble_ request, please **mention my name and link back to this repository** if you ever use this in any of your own implementations.
 
 [github]: https://github.com/Aerobird98/limen
 [mit license]: https://github.com/Aerobird98/limen/blob/master/LICENSE.txt
