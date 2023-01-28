@@ -64,7 +64,7 @@ Result result = eval(&state, "++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]", "");
 
 // Handle result, visualize state, etc.
 if (result == RESULT_OK) {
-    fprintf(stdout, "%s\n", state.response.out);
+    fprintf(stdout, "%s\n", state.response.values);
 } else {
     fprintf(stderr, "Error: Unhandled error.");
 }
