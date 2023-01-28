@@ -4,7 +4,7 @@ GG ?= 0
 NM ?= limen
 
 # Command used to copy files to another location.
-CP ?= install -m 755
+CP ?= install -C -m 755
 # Command used to delete files.
 RM ?= rm -f
 
