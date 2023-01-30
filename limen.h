@@ -29,34 +29,33 @@
     #include <stdio.h>
 #endif
 
-// NOTE: These could be good default values, consider exposing these trough a config struct passed
-//       to state on initialization to allow for per state user configuration.
-#define VALUE_MAX            127
+// TODO: Not all of these are in use.
 #define MEMORY_MAX           65535
 #define ARRAY_CAPACITY_MAX   32767
 #define ARRAY_COUNT_MAX      30000
 #define ARRAY_GROW_THRESHOLD 8
 #define ARRAY_GROW_FACTOR    2
+#define VALUE_MAX            127
 
 // A generic allocation function that handles all explicit memory management.
 //
 // It's used like so:
 //
-// - To allocate new memory, <memory> is NULL and <was> is zero. It should
-//   return the allocated memory or NULL on failure.
+// - To allocate new memory, <memory> is NULL and <was> is zero. It should return the allocated
+//   memory or NULL on failure.
 //
-// - To attempt to grow an existing allocation, <memory> is the memory,
-//   <was> is its previous size, and <will> is the desired size.
-//   It should return <memory> if it was able to grow it in place, or a new
-//   memory if it had to move it.
+// - To attempt to grow an existing allocation, <memory> is the memory, <was> is its previous size,
+//   and <will> is the desired size. It should return <memory> if it was able to grow it in place,
+//   or a new memory if it had to move it.
 //
-// - To shrink memory, <memory>, <was>, and <will> are the same as above
-//   but it will always return <memory>.
+// - To shrink memory, <memory>, <was>, and <will> are the same as above but it will always return
+//   <memory>.
 //
-// - To free memory, <memory> will be the memory to free and <will> and
-//   <was> will be zero. It should return NULL.
+// - To free memory, <memory> will be the memory to free and <will> and <was> will be zero. It
+//   should return NULL.
 //
-// NOTE: Use provided MACROS.
+// TODO: Consider limiting memory usage. A reasonable maximum could be defined
+//       trough usage tests.
 void *reallocate(void *memory, size_t was, size_t will);
 
 #define ALLOCATE(type)                 (type *)reallocate(NULL, 0, sizeof(type))
@@ -75,9 +74,9 @@ void *reallocate(void *memory, size_t was, size_t will);
 // A dynamic unsigned char array implementation that uses the generic allocation
 // function trough a series of MACROS to grow when new values are written to it.
 //
-// NOTE: This implementation could run into issues if the count or capacity value
+// TODO: This implementation could run into issues if the count or capacity value
 //       overflows an int. It sould be quite rare, yet consider limiting capacity
-//       and count accounting for the occasional null byte at the end.
+//       and count.
 typedef struct sCharArray {
     int count;
     int capacity;
@@ -90,10 +89,7 @@ void freeCharArray(CharArray *array);
 
 // Store informations between evaluations.
 //
-// This shold be read-only and sould only be modified trough the provided library functions.
-//
-// NOTE: It would be wise to limit the memory usage of any given state. A reasonable maximum could
-//       be defined based on usage tests.
+// NOTE: This sould be read-only.
 typedef struct sState {
     CharArray prompt;        // Validated prompt read from user data.
     CharArray instructions;  // Validated instructions read from user code.
@@ -110,7 +106,6 @@ typedef struct sState {
 
     int brackets;  // Mismatched bracket count for error checks and loop management.
     int commas;    // Mismatched comma count for error checks.
-
 } State;
 
 void initState(State *state);

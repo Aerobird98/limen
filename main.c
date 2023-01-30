@@ -40,10 +40,10 @@ int main(int argc, const char *argv[]) {
     // Define exit code as EX_OK: Successful evaluation.
     int ex = 0;
 
-    // If there are mismatched arguments.
-    //
     // TODO: Implement the REPL. We need something like the uv library to have consistent behavior
     //       arcoss operating systems.
+
+    // If there are mismatched arguments.
     if (argc < 3 || argc > 3) {
         fprintf(stderr, "Usage: %s <code> <data>\n", argv[0]);
         // Set exit code to EX_USAGE: The command was used incorrectly.
@@ -52,8 +52,12 @@ int main(int argc, const char *argv[]) {
         return ex;
     }
 
+    // User code is the first argument.
     const unsigned char *code = (const unsigned char *)argv[1];
+    // User data is the second argument.
     const unsigned char *data = (const unsigned char *)argv[2];
+
+    // TODO: Handle bad library usage.
 
     // Declare state.
     State state;
@@ -62,14 +66,6 @@ int main(int argc, const char *argv[]) {
     initState(&state);
 
     // Run eval on a piece of code, manipulating state and returning a result.
-    //
-    // TODO: As of now we cannot run eval twice on the same state, tough it is possible to do so
-    //       which invalidates state. We would need to reinitialize the prompt, instructions and
-    //       response CharArrays and their counters and pointers in order to be able to, tough afer
-    //       evaluation we need them for state visualization. Do we need to keep the stream, its
-    //       counter and its pointer, as is, between evaluations? Inside a REPL session maybe? As of
-    //       now we need to free state then reinitialize it to be able to reuse it between
-    //       consecutive evaluations.
     Result result = eval(&state, code, data);
 
     // Handle result and set exit code based on that.
