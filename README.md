@@ -40,7 +40,7 @@ This implementation is written ex nihilo and stands for a compact, secure and re
 
 - **It’s fast and efficient.** – The implementation splits evaluation into parse-compile- and run time; it does all the validation and optimization at parse-compile- while at run time only checks for memory- and stream management errors.
 
-- **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason while Brainfuck exists in the first place.
+- **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason why Brainfuck exists in the first place.
 
 This implementation is **encoding agnostic**, user code is validated to only contain standard **ASCII** characters in the range of `0-127`. While I admit that it is rather strange, it does make the implementation more secure and reliable which was key troughout development.
 
@@ -64,7 +64,7 @@ Result result = eval(&state, "++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]", "");
 
 // Handle result, visualize state, etc.
 if (result == RESULT_OK) {
-    fprintf(stdout, "%s\n", state.response.out);
+    fprintf(stdout, "%s\n", state.response.values);
 } else {
     fprintf(stderr, "Error: Unhandled error.");
 }
@@ -75,7 +75,7 @@ freeState(&state);
 
 For a more complete usage example, consult with the `main.c` file which contains the command-line- and REPL implementations of a possible interpreter.
 
-## Compile & Conquer
+## Get, Compile & Conquer
 
 Limen lives on [Github](). To play around with it, sync it down then:
 
@@ -85,7 +85,7 @@ Limen lives on [Github](). To play around with it, sync it down then:
 - Run `limen <code>` to evaluate it.
 - Run `make clean` to clean built files.
 
-If everithing goes well, you will see all the ASCII characters in the range of `32-127`.
+If everything goes well, you will see all the ASCII characters in the range of `32-127`.
 
 ```
  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
