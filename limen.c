@@ -34,26 +34,26 @@ void *reallocate(void *memory, size_t was, size_t will) {
     return realloc(memory, will);
 }
 
-void initCharArray(CharArray *array) {
+void initByteArray(ByteArray *array) {
     array->values = NULL;
 
     array->capacity = 0;
     array->count = 0;
 }
 
-void writeCharArray(CharArray *array, unsigned char value) {
+void writeByteArray(ByteArray *array, Byte value) {
     if (array->capacity < array->count + 1) {
         int capacity = array->capacity;
         array->capacity = GROW_CAPACITY(capacity);
 
-        array->values = GROW_ARRAY(unsigned char, array->values, capacity, array->capacity);
+        array->values = GROW_ARRAY(Byte, array->values, capacity, array->capacity);
     }
 
     array->values[array->count++] = value;
 }
 
-void freeCharArray(CharArray *array) {
-    FREE_ARRAY(unsigned char, array->values, array->capacity);
+void freeByteArray(ByteArray *array) {
+    FREE_ARRAY(Byte, array->values, array->capacity);
 
     array->values = NULL;
 
@@ -62,10 +62,10 @@ void freeCharArray(CharArray *array) {
 }
 
 void initState(State *state) {
-    initCharArray(&state->prompt);
-    initCharArray(&state->instructions);
-    initCharArray(&state->stream);
-    initCharArray(&state->response);
+    initByteArray(&state->prompt);
+    initByteArray(&state->instructions);
+    initByteArray(&state->stream);
+    initByteArray(&state->response);
 
     state->pp = NULL;
     state->ip = NULL;
@@ -80,10 +80,10 @@ void initState(State *state) {
 }
 
 void freeState(State *state) {
-    freeCharArray(&state->prompt);
-    freeCharArray(&state->instructions);
-    freeCharArray(&state->stream);
-    freeCharArray(&state->response);
+    freeByteArray(&state->prompt);
+    freeByteArray(&state->instructions);
+    freeByteArray(&state->stream);
+    freeByteArray(&state->response);
 
     state->pp = NULL;
     state->ip = NULL;
@@ -137,7 +137,7 @@ static void debugPrintResponse(State *state) {
 }
 #endif
 
-Result eval(State *state, const unsigned char *code, const unsigned char *data) {
+Result eval(State *state, const Byte *code, const Byte *data) {
     // Parse-Compile-time.
     //
     // At this phase we parse user code into validated instructions. Effectively Compiling code into
@@ -148,7 +148,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
         if (*data <= 127 && *data >= 32) {
             // Increment the comma counter.
             state->commas++;
-            writeCharArray(&state->prompt, *data);
+            writeByteArray(&state->prompt, *data);
         }
 
         // Step one character.
@@ -156,7 +156,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
     }
 
     // Terminate the prompt array by writing a NULL character.
-    writeCharArray(&state->prompt, '\0');
+    writeByteArray(&state->prompt, '\0');
 
     while (*code != '\0') {
         // Skip non ASCII characters.
@@ -164,41 +164,41 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
             // Skip every character besides the eight instructions.
             switch (*code) {
                 case '+': {
-                    writeCharArray(&state->instructions, '+');
+                    writeByteArray(&state->instructions, '+');
                     break;
                 }
                 case '-': {
-                    writeCharArray(&state->instructions, '-');
+                    writeByteArray(&state->instructions, '-');
                     break;
                 }
                 case '>': {
-                    writeCharArray(&state->instructions, '>');
+                    writeByteArray(&state->instructions, '>');
                     break;
                 }
                 case '<': {
-                    writeCharArray(&state->instructions, '<');
+                    writeByteArray(&state->instructions, '<');
                     break;
                 }
                 case '.': {
-                    writeCharArray(&state->instructions, '.');
+                    writeByteArray(&state->instructions, '.');
                     break;
                 }
                 case ',': {
                     // Decrement the comma counter.
                     state->commas--;
-                    writeCharArray(&state->instructions, ',');
+                    writeByteArray(&state->instructions, ',');
                     break;
                 }
                 case '[': {
                     // Increment the bracket counter.
                     state->brackets++;
-                    writeCharArray(&state->instructions, '[');
+                    writeByteArray(&state->instructions, '[');
                     break;
                 }
                 case ']': {
                     // Decrement the bracket counter.
                     state->brackets--;
-                    writeCharArray(&state->instructions, ']');
+                    writeByteArray(&state->instructions, ']');
                     break;
                 }
             }
@@ -209,10 +209,10 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
     }
 
     // Terminate the instructions array by writing a NULL character.
-    writeCharArray(&state->instructions, '\0');
+    writeByteArray(&state->instructions, '\0');
 
     // Grow the stream by writing a Null character.
-    writeCharArray(&state->stream, '\0');
+    writeByteArray(&state->stream, '\0');
 
     // Set PP to point at the first value in the prompt.
     state->pp = &state->prompt.values[0];
@@ -227,7 +227,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
         state->commas = 0;
 
         // Error out.
-        return RESULT_ERROR_MISMATCHED_COMMAS;
+        return RESULT_MISMATCHED_COMMAS;
     }
 
     // If there are mismatched brackets.
@@ -236,7 +236,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
         state->brackets = 0;
 
         // Error out.
-        return RESULT_ERROR_MISMATCHED_BRACKETS;
+        return RESULT_MISMATCHED_BRACKETS;
     }
 
     // Run-time.
@@ -272,7 +272,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
                 // If we moved outside the stream.
                 if (state->stream.count <= state->spc) {
                     // Grow the stream by writing a Null character.
-                    writeCharArray(&state->stream, '\0');
+                    writeByteArray(&state->stream, '\0');
                 }
 
                 // Move the stream pointer forward on the stream.
@@ -290,7 +290,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
                     state->spc = 0;
 
                     // Error out.
-                    return RESULT_ERROR_STREAM_UNDERFLOW;
+                    return RESULT_ARRAY_UNDERFLOW;
                 }
 
                 // Move the stream pointer backward on the stream.
@@ -299,7 +299,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
             }
             // Write the value at the stream pointer into the response array.
             case '.': {
-                writeCharArray(&state->response, *state->sp);
+                writeByteArray(&state->response, *state->sp);
 
 #if DEBUG >= 1
                 debugPrintResponse(state);
@@ -392,7 +392,7 @@ Result eval(State *state, const unsigned char *code, const unsigned char *data) 
     }
 
     // Terminate the response array by writing a NULL character.
-    writeCharArray(&state->response, '\0');
+    writeByteArray(&state->response, '\0');
 
 #if DEBUG >= 1
     debugPrintInstructions(state);

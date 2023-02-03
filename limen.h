@@ -71,45 +71,55 @@ void *reallocate(void *memory, size_t was, size_t will);
 #define FREE_ARRAY(type, memory, capacity)         reallocate(memory, sizeof(type) * (capacity), 0)
 
 typedef enum eResult {
-    RESULT_OK,
-    RESULT_ERROR_MISMATCHED_COMMAS,
-    RESULT_ERROR_MISMATCHED_BRACKETS,
-    RESULT_ERROR_STREAM_UNDERFLOW,
-    RESULT_ERROR_UNKNOWN,
+    RESULT_OK,                   // Everything went fine.
+    RESULT_MISMATCHED_COMMAS,    // Every comma should have a corresponding character in user
+                                 // data. Their numbers must match.
+    RESULT_MISMATCHED_BRACKETS,  // Every opening bracket should have a corresponding closing
+                                 // bracket in user code. Their numbers must match.
+    RESULT_ARRAY_UNDERFLOW,      // An Array pointer offset went below zero.
+    RESULT_UNKNOWN,              // Something went wrong.
 } Result;
 
-// A dynamic unsigned char array implementation that uses the generic allocation
-// function trough a series of MACROS to grow when new values are written to it.
+// RESULT_ARRAY_OVERFLOW,            An Array pointer offset went above maximum.
+// RESULT_ARRAY_NOT_ENOUGH_CAPACITY, An array reached its maximum capacity.
+
+// A byte.
+//
+// NOTE: Should be in the range of zero to 255.
+typedef unsigned char Byte;
+
+// A dynamic byte array implementation that uses the generic allocation function trough a series of
+// MACROS to grow when new values are written to it.
 //
 // TODO: This implementation could run into issues if the count or capacity value
 //       overflows an int. It sould be quite rare, yet consider limiting capacity
 //       and count.
-typedef struct sCharArray {
+typedef struct sByteArray {
     int count;
     int capacity;
-    unsigned char *values;
-} CharArray;
+    Byte *values;
+} ByteArray;
 
-void initCharArray(CharArray *array);
-void writeCharArray(CharArray *array, unsigned char value);
-void freeCharArray(CharArray *array);
+void initByteArray(ByteArray *array);
+void writeByteArray(ByteArray *array, Byte value);
+void freeByteArray(ByteArray *array);
 
 // Store informations between evaluations.
 //
 // NOTE: This sould be read-only.
 typedef struct sState {
-    CharArray prompt;        // Validated prompt read from user data.
-    CharArray instructions;  // Validated instructions read from user code.
-    CharArray stream;        // Stream for the validated instructions to operate on.
-    CharArray response;      // Response of the validated instructions.
+    ByteArray prompt;        // Validated prompt read from user data.
+    ByteArray instructions;  // Validated instructions read from user code.
+    ByteArray stream;        // Stream for the validated instructions to operate on.
+    ByteArray response;      // Response of the validated instructions.
 
-    unsigned char *pp;  // Pointer pointing at the current value in the prompt.
-    unsigned char *ip;  // Pointer pointing at the current instruction.
-    unsigned char *sp;  // Pointer pointing at the current value on the stream.
+    Byte *pp;  // Pointer pointing at the current value in the prompt.
+    Byte *ip;  // Pointer pointing at the current instruction.
+    Byte *sp;  // Pointer pointing at the current value on the stream.
 
-    int ppc;  // Counts where the prompt pointer is.
-    int ipc;  // Counts where the instruction pointer is.
-    int spc;  // Counts where the stream pointer is.
+    int ppc;  // Pointer offset. Counts where the prompt pointer is.
+    int ipc;  // Pointer offset. Counts where the instruction pointer is.
+    int spc;  // Pointer offset. Counts where the stream pointer is.
 
     int brackets;  // Mismatched bracket count for error checks and loop management.
     int commas;    // Mismatched comma count for error checks.
@@ -119,6 +129,6 @@ void initState(State *state);
 void freeState(State *state);
 
 // Evaluate provided user code into a response.
-Result eval(State *state, const unsigned char *code, const unsigned char *data);
+Result eval(State *state, const Byte *code, const Byte *data);
 
 #endif

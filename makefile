@@ -1,15 +1,18 @@
 # DEBUG Level.
 GG ?= 0
+
 # Name of the program.
 NM ?= limen
 
 # Command used to copy files to another location.
 CP ?= install -C -m 755
+
 # Command used to delete files.
 RM ?= rm -f
 
 # Compiler.
 CC ?= gcc
+
 # Destination directory.
 DESTDIR ?= ~/../usr
 
@@ -32,11 +35,11 @@ HEADERS := $(wildcard *.h)
 SOURCES := $(wildcard *.c)
 OBJECTS := $(notdir $(SOURCES:.c=.o))
 
-# Compile object files.
+# Compile all object files.
 %.o: %.c $(HEADERS)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
-# Link the object files and libraries.
+# Link all the object files and libraries.
 $(NM): $(OBJECTS)
 	@ $(CC) $(CFLAGS) $^ -o $@
 
@@ -44,17 +47,17 @@ $(NM): $(OBJECTS)
 .PHONY: all
 all: $(NM)
 
-# Install built files.
+# Install all built files.
 .PHONY: install
 install:
 	@ $(CP) $(NM) $(BINDIR)/
 
-# Uninstall built files.
+# Uninstall all built files.
 .PHONY: uninstall
 uninstall:
-	@ $(RM) $(BINDIR)$(NM)
+	@ $(RM) $(BINDIR)/$(NM)
 
-# Clean built files.
+# Clean all built files.
 .PHONY: clean
 clean:
 	@ $(RM) $(OBJECTS)

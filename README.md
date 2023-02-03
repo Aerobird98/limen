@@ -34,21 +34,21 @@ In the end, a program is just a series of instructions. Characters besides the e
 
 This implementation is written ex nihilo and stands for a compact, secure and reliable interpreter for this remarkable language.
 
-- **It’s compact.** – The implementation is rather compact, readable and logical with friendly comments all the way trough. You can skim the whole thing with ease.
+- **It’s compact.** – The implementation is rather compact, readable and logical with friendly comments all the way trough. You can skim the whole thing with ease in just an afternoon.
 
-- **It’s secure and reliable.** – Memory use is dynamic and strictly contained. The core uses zero static data and it does not leak memory with reliable and user-friendly error handling mechanisms in place.
+- **It’s secure and reliable.** – Memory use is dynamic and strictly contained. The core uses zero static data and it does not leak memory. The implementation has reliable and user-friendly error handling mechanisms in place.
 
 - **It’s fast and efficient.** – The implementation splits evaluation into parse-compile- and run time; it does all the validation and optimization at parse-compile- while at run time only checks for memory- and stream management errors.
 
-- **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason why Brainfuck exists in the first place.
+- **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason why Brainfuck exists in the first place. (Comming soon.)
 
-This implementation is **encoding agnostic**, user code is validated to only contain standard **ASCII** characters in the range of `0-127`. While I admit that it is rather strange, it does make the implementation more secure and reliable which was key troughout development.
+This implementation is **encoding agnostic**, user code and data are validated to only contain standard **ASCII** characters in the range of `0-127`. While I admit that it is rather strange, it does make the implementation more secure and reliable which was key troughout development. All other characters are ignored.
 
 ## Embeding
 
-This implementation made to be **embedable**, implemented as a small C _library_ consisting of a named `.c` and `.h` file; written in ANSI C with **NO** dependencies other than a _few_ C standard library functions, _realloc_ and _free_.
+This implementation is made to be **embedable**, implemented as a small C _library_ consisting of only a `.c` and an `.h` file; written in ANSI C with **NO** dependencies other than a _few_ C standard library functions.
 
-You only need two files to include in your program, a named `.c` file and `.h` file. Copy those and you are good to go. Import the `.h` file to access the implementation.
+You only need two files to include in your program, the `limen.c` file and `limen.h` file. Copy those and you are good to go. Import the `limen.h` file to access the implementation.
 
 In its most simple form you only need to:
 
@@ -81,9 +81,11 @@ Limen lives on [Github](). To play around with it, sync it down then:
 
 - Configure the `makefile` to suit your needs.
 - Run `make` to build like _normal_.
-- Go back and copy the `<code>` at the head of this `README`.
-- Run `limen <code>` to evaluate it.
-- Run `make clean` to clean built files.
+- Go back and copy the `<code>` at the head of this `README` into a string, `<data>` is only needed when you want to use the `,` instruction in your code otherwise just set it to `""` an empty string.
+- Run `make install` to install the program.
+- Run `limen <code> <data>` to evaluate it.
+- Run `make clean` to clean all built files.
+- Run `make uninstall` if you are not satisfied enough.
 
 If everything goes well, you will see all the ASCII characters in the range of `32-127`.
 
@@ -91,7 +93,7 @@ If everything goes well, you will see all the ASCII characters in the range of `
  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 ```
 
-Without *argument*s, it drops you into a **REPL** — an interactive session. You can type in instructions and it will evaluate them immediately while vizualizes the stream and its pointer before every evaluation.
+Without *argument*s, it drops you into a **REPL** — an interactive session. You can type in instructions and it will evaluate them immediately while vizualizes the stream and its pointer before every evaluation. (Comming soon.)
 
 ## Learning & Experimentation
 

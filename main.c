@@ -53,9 +53,9 @@ int main(int argc, const char *argv[]) {
     }
 
     // User code is the first argument.
-    const unsigned char *code = (const unsigned char *)argv[1];
+    const Byte *code = (const Byte *)argv[1];
     // User data is the second argument.
-    const unsigned char *data = (const unsigned char *)argv[2];
+    const Byte *data = (const Byte *)argv[2];
 
     // TODO: Handle bad library usage.
 
@@ -76,25 +76,25 @@ int main(int argc, const char *argv[]) {
             ex = 0;
             break;
         }
-        case RESULT_ERROR_MISMATCHED_COMMAS: {
+        case RESULT_MISMATCHED_COMMAS: {
             fprintf(stderr, "Error: Mismatched commas.\n");
             // Set exit code to EX_DATAERR: The input data was incorrect.
             ex = 65;
             break;
         }
-        case RESULT_ERROR_MISMATCHED_BRACKETS: {
+        case RESULT_MISMATCHED_BRACKETS: {
             fprintf(stderr, "Error: Mismatched brackets.\n");
             // Set exit code to EX_DATAERR: The input data was incorrect.
             ex = 65;
             break;
         }
-        case RESULT_ERROR_STREAM_UNDERFLOW: {
-            fprintf(stderr, "Error: Stream underflow.\n");
+        case RESULT_ARRAY_UNDERFLOW: {
+            fprintf(stderr, "Error: Array underflow.\n");
             // Set exit code to EX_SOFTWARE: An internal software error has been detected.
             ex = 70;
             break;
         }
-        case RESULT_ERROR_UNKNOWN: {
+        case RESULT_UNKNOWN: {
             fprintf(stderr, "Error: Unknown error.\n");
             // Set exit code to EX_UNAVAILABLE:  Something did not work and do not know why.
             ex = 69;
