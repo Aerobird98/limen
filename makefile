@@ -10,7 +10,7 @@ RM ?= rm -f
 
 # Compiler.
 CC ?= gcc
-# Destination directory for the install target.
+# Destination directory.
 DESTDIR ?= ~/../usr
 
 # Compiler flags.
@@ -23,6 +23,10 @@ else
 	CFLAGS += -O3
 endif
 
+# Directories.
+LIBDIR := $(DESTDIR)/lib
+BINDIR := $(DESTDIR)/bin
+
 # Files.
 HEADERS := $(wildcard *.h)
 SOURCES := $(wildcard *.c)
@@ -32,7 +36,7 @@ OBJECTS := $(notdir $(SOURCES:.c=.o))
 %.o: %.c $(HEADERS)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
-# Link the object files.
+# Link the object files and libraries.
 $(NM): $(OBJECTS)
 	@ $(CC) $(CFLAGS) $^ -o $@
 
@@ -43,12 +47,12 @@ all: $(NM)
 # Install built files.
 .PHONY: install
 install:
-	@ $(CP) $(NM) $(DESTDIR)/bin/
+	@ $(CP) $(NM) $(BINDIR)/
 
 # Uninstall built files.
 .PHONY: uninstall
 uninstall:
-	@ $(RM) $(DESTDIR)/bin/$(NM)
+	@ $(RM) $(BINDIR)$(NM)
 
 # Clean built files.
 .PHONY: clean
