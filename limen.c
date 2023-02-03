@@ -85,10 +85,6 @@ void freeState(State *state) {
     freeCharArray(&state->stream);
     freeCharArray(&state->response);
 
-    FREE(unsigned char, state->pp);
-    FREE(unsigned char, state->ip);
-    FREE(unsigned char, state->sp);
-
     state->pp = NULL;
     state->ip = NULL;
     state->sp = NULL;
