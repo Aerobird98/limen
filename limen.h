@@ -65,11 +65,18 @@ void *reallocate(void *memory, size_t was, size_t will);
 #define ALLOCATE_ARRAY(type, capacity) (type *)reallocate(NULL, 0, sizeof(type) * (capacity))
 #define GROW_CAPACITY(capacity) \
     ((capacity) < ARRAY_GROW_THRESHOLD ? ARRAY_GROW_THRESHOLD : (capacity) * (ARRAY_GROW_FACTOR))
-#define GROW_ARRAY(type, memory, wasCapacity, capacity) \
-    (type *)reallocate(memory, sizeof(type) * (wasCapacity), sizeof(type) * (capacity))
-#define SRINK_ARRAY(type, memory, wasCapacity, capacity) \
-    GROW_ARRAY(type, memory, wasCapacity, capacity)
-#define FREE_ARRAY(type, memory, capacity) reallocate(memory, sizeof(type) * (capacity), 0)
+#define GROW_ARRAY(type, memory, count, capacity) \
+    (type *)reallocate(memory, sizeof(type) * (count), sizeof(type) * (capacity))
+#define SRINK_ARRAY(type, memory, count, capacity) GROW_ARRAY(type, memory, count, capacity)
+#define FREE_ARRAY(type, memory, capacity)         reallocate(memory, sizeof(type) * (capacity), 0)
+
+typedef enum eResult {
+    RESULT_OK,
+    RESULT_ERROR_MISMATCHED_COMMAS,
+    RESULT_ERROR_MISMATCHED_BRACKETS,
+    RESULT_ERROR_STREAM_UNDERFLOW,
+    RESULT_ERROR_UNKNOWN,
+} Result;
 
 // A dynamic unsigned char array implementation that uses the generic allocation
 // function trough a series of MACROS to grow when new values are written to it.
@@ -110,14 +117,6 @@ typedef struct sState {
 
 void initState(State *state);
 void freeState(State *state);
-
-typedef enum eResult {
-    RESULT_OK,
-    RESULT_ERROR_MISMATCHED_COMMAS,
-    RESULT_ERROR_MISMATCHED_BRACKETS,
-    RESULT_ERROR_STREAM_UNDERFLOW,
-    RESULT_ERROR_UNKNOWN,
-} Result;
 
 // Evaluate provided user code into a response.
 Result eval(State *state, const unsigned char *code, const unsigned char *data);

@@ -43,10 +43,10 @@ void initCharArray(CharArray *array) {
 
 void writeCharArray(CharArray *array, unsigned char value) {
     if (array->capacity < array->count + 1) {
-        int wasCapacity = array->capacity;
-        array->capacity = GROW_CAPACITY(wasCapacity);
+        int capacity = array->capacity;
+        array->capacity = GROW_CAPACITY(capacity);
 
-        array->values = GROW_ARRAY(unsigned char, array->values, wasCapacity, array->capacity);
+        array->values = GROW_ARRAY(unsigned char, array->values, capacity, array->capacity);
     }
 
     array->values[array->count++] = value;
