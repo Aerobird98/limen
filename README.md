@@ -4,7 +4,7 @@
 ++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]
 ```
 
-Limen means _threshold_ in latin. Limen is Brainfuck. Brainfuck is a turing complete **esoteric** programming language created in _1992_ by Urban Müller. Its name is a reference to the _slang_ term _brainfuck_, which refers to things so **complicated** or **unusual** that they exceed the limits of one's understanding and it is certain that one would realy need to cross a cretain _threshold_ in order to use this language.
+Limen means _threshold_ in latin. Limen is Brainfuck which is a turing complete **esoteric** programming language created in _1992_ by Urban Müller. Its name is a reference to the _slang_ term _brainfuck_, which refers to things so **complicated** or **unusual** that they exceed the limits of one's understanding and it is certain that one would realy need to cross a cretain _threshold_ in order to use this language.
 
 Brainfuck is notable for its **minimalism**. At the core of the language is a more-than-compact instruction set, comprising of **8** simple **instructions**, yet in theory with some creative thinking and the ability to break down complex tasks into microscopic steps you are more than capable of writing almost any program one can think of.
 
@@ -34,7 +34,7 @@ In the end, a program is just a series of instructions. Characters besides the e
 
 This implementation is written ex nihilo and stands for a compact, secure and reliable interpreter for this remarkable language.
 
-- **It’s compact.** – The implementation is rather compact, readable and logical with friendly comments all the way trough. You can skim the whole thing with ease in just an afternoon.
+- **It’s compact and clean.** – The implementation is rather compact, readable and logical with friendly comments all the way trough. You can skim the whole thing with ease in just an afternoon.
 
 - **It’s secure and reliable.** – Memory use is dynamic and strictly contained. The core uses zero static data and it does not leak memory. The implementation has reliable and user-friendly error handling mechanisms in place.
 

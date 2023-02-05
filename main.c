@@ -40,10 +40,10 @@ int main(int argc, const char *argv[]) {
     // Define exit code as EX_OK: Successful evaluation.
     int ex = 0;
 
-    // TODO: Implement the REPL. We need something like the uv library to have consistent behavior
-    //       arcoss operating systems.
+    // TODO: Implement the REPL. We need something like the uv library (libuv) to have consistent
+    //       behavior arcoss operating systems.
 
-    // If there are mismatched arguments.
+    // If there are mismatched command-line arguments.
     if (argc < 3 || argc > 3) {
         fprintf(stderr, "Usage: %s <code> <data>\n", argv[0]);
         // Set exit code to EX_USAGE: The command was used incorrectly.
@@ -52,12 +52,19 @@ int main(int argc, const char *argv[]) {
         return ex;
     }
 
-    // User code is the first argument.
+    // User code is the first command-line argument.
     const Byte *code = (const Byte *)argv[1];
-    // User data is the second argument.
+    // User data is the second command-line argument.
     const Byte *data = (const Byte *)argv[2];
 
     // TODO: Handle bad library usage.
+    //
+    // NOTE: Calling eval before initializing or mutiple times after initialization without an
+    //       inbetween free call, freeing state before initializing or initializing twice or more
+    //       before or after freeing all causes undefined behavior. When we free the state, we also
+    //       reinitialize it to its default values, so it is safe to call free multiple times after
+    //       initialization; but do not ever try to call eval twice or more on a state without
+    //       inbetween freeing it; that causes undefined behavior.
 
     // Declare state.
     State state;
@@ -68,7 +75,7 @@ int main(int argc, const char *argv[]) {
     // Run eval on a piece of code, manipulating state and returning a result.
     Result result = eval(&state, code, data);
 
-    // Handle result and set exit code based on that.
+    // Handle result, report errors and set exit code based on those.
     switch (result) {
         case RESULT_OK: {
             fprintf(stdout, "%s\n", state.response.values);
@@ -90,6 +97,18 @@ int main(int argc, const char *argv[]) {
         }
         case RESULT_ARRAY_UNDERFLOW: {
             fprintf(stderr, "Error: Array underflow.\n");
+            // Set exit code to EX_SOFTWARE: An internal software error has been detected.
+            ex = 70;
+            break;
+        }
+        case RESULT_ARRAY_OVERFLOW: {
+            fprintf(stderr, "Error: Array overflow.\n");
+            // Set exit code to EX_SOFTWARE: An internal software error has been detected.
+            ex = 70;
+            break;
+        }
+        case RESULT_NOT_ENOUGH_MEMORY: {
+            fprintf(stderr, "Error: Not enough memory.\n");
             // Set exit code to EX_SOFTWARE: An internal software error has been detected.
             ex = 70;
             break;

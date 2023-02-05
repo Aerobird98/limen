@@ -37,6 +37,26 @@
 #define ARRAY_GROW_FACTOR    2
 #define VALUE_MAX            127
 
+// TODO: Not all of these are in use.
+typedef enum eResult {
+    RESULT_OK,                   // Everything went fine.
+    RESULT_MISMATCHED_COMMAS,    // Commas do not match. Every comma should have a corresponding
+                                 // character in user data. Their numbers must match.
+    RESULT_MISMATCHED_BRACKETS,  // brackets do not match. Every opening bracket should have a
+                                 // corresponding closing bracket in user code. Their numbers must
+                                 // match.
+    RESULT_ARRAY_OVERFLOW,   // An array reached its maximum count or capacity or its pointer offset
+                             // went above those values.
+    RESULT_ARRAY_UNDERFLOW,  // An Array erased a NULL value or its pointer offset went
+                             // below zero.
+    RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory.
+    RESULT_UNKNOWN,            // Something went wrong.
+} Result;
+
+#if DEBUG >= 1
+extern size_t bytes;
+#endif
+
 // A generic allocation function that handles all explicit memory management.
 //
 // It's used like so:
@@ -69,19 +89,6 @@ void *reallocate(void *memory, size_t was, size_t will);
     (type *)reallocate(memory, sizeof(type) * (count), sizeof(type) * (capacity))
 #define SRINK_ARRAY(type, memory, count, capacity) GROW_ARRAY(type, memory, count, capacity)
 #define FREE_ARRAY(type, memory, capacity)         reallocate(memory, sizeof(type) * (capacity), 0)
-
-typedef enum eResult {
-    RESULT_OK,                   // Everything went fine.
-    RESULT_MISMATCHED_COMMAS,    // Every comma should have a corresponding character in user
-                                 // data. Their numbers must match.
-    RESULT_MISMATCHED_BRACKETS,  // Every opening bracket should have a corresponding closing
-                                 // bracket in user code. Their numbers must match.
-    RESULT_ARRAY_UNDERFLOW,      // An Array pointer offset went below zero.
-    RESULT_UNKNOWN,              // Something went wrong.
-} Result;
-
-// RESULT_ARRAY_OVERFLOW,            An Array pointer offset went above maximum.
-// RESULT_ARRAY_NOT_ENOUGH_CAPACITY, An array reached its maximum capacity.
 
 // A byte.
 //
@@ -117,9 +124,10 @@ typedef struct sState {
     Byte *ip;  // Pointer pointing at the current instruction.
     Byte *sp;  // Pointer pointing at the current value on the stream.
 
-    int ppc;  // Pointer offset. Counts where the prompt pointer is.
-    int ipc;  // Pointer offset. Counts where the instruction pointer is.
-    int spc;  // Pointer offset. Counts where the stream pointer is.
+    int ppc;  // Prompt pointer offset or prompt counter. Counts where the prompt pointer is.
+    int ipc;  // Instructions pointer offset or instructions counter. Counts where the instructions
+              // pointer is.
+    int spc;  // Stream pointer offset or stream counter. Counts where the stream pointer is.
 
     int brackets;  // Mismatched bracket count for error checks and loop management.
     int commas;    // Mismatched comma count for error checks.
