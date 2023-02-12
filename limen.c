@@ -152,8 +152,8 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     // into a safe-to-run run-time representation while optimizing user code where possible; also
     // parse user data into a validated prompt.
 
-    // Copy user data into the prompt array, character by character while the current character is
-    // not the NULL character.
+    // Copy user data into the prompt array, character by character, stop if the current character
+    // is the NULL character.
     while (*data != '\0') {
         // Skip non ASCII characters.
         if (*data <= 127 && *data >= 32) {
@@ -169,8 +169,8 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     // Terminate the prompt array by writing a NULL character.
     writeByteArray(&state->prompt, '\0');
 
-    // Copy user code into the instructions array, character by character
-    // while the current character is not the NULL character.
+    // Copy user code into the instructions array, character by character, stop if the current
+    // character is the NULL character.
     //
     // NOTE: As an optimization, instead of copying characters, write opcodes, they enable
     //       parse-compile-time optimizations; writing a special opcode that replaces a sequence of
@@ -261,13 +261,13 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     // At this phase we run validated instructions evaluating them into a response. Effectively
     // manipulating the stream and altering state.
 
-    // Run isntructions while IP is not pointing at the NULL character.
+    // Run isntructions, stop at the NULL character.
     while (*state->ip != '\0') {
 #if DEBUG >= 1
         debugPrintInstructions(state);
 #endif
 
-        // Based on the current instruction.
+        // Run the current instruction.
         switch (*state->ip) {
             // Increment the value at the stream pointer.
             case '+': {
@@ -354,7 +354,6 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                     // Increment the bracket counter.
                     state->brackets++;
                     // Move the instructions pointer forward while the brackets counter is not zero.
-                    // Skip every instruction until we reach the matching ] instruction.
                     while (state->brackets != 0) {
                         // If the current instruction is a [.
                         if (*state->ip == '[') {
@@ -385,7 +384,7 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                     // Increment the bracket counter.
                     state->brackets++;
                     // Move the instructions pointer backward while the brackets counter is not
-                    // zero. Skip every instruction until we reach the matching [ instruction.
+                    // zero.
                     while (state->brackets != 0) {
                         // If the current instruction is a ].
                         if (*state->ip == ']') {
