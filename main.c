@@ -3,28 +3,6 @@
 #include "limen.h"
 
 static void printState(State *state) {
-    for (int i = 0; i < state->prompt.count; i++) {
-        fprintf(stderr, "%c", state->prompt.values[i]);
-    }
-
-    fprintf(stderr, "\n");
-
-    for (int i = 0; i < state->instructions.count; i++) {
-        fprintf(stderr, "%c", state->instructions.values[i]);
-    }
-
-    fprintf(stderr, "\n");
-
-    for (int i = 0; i < state->instructions.count; i++) {
-        if (i == state->ipc) {
-            fprintf(stderr, "%c", '^');
-        } else {
-            fprintf(stderr, "%c", '-');
-        }
-    }
-
-    fprintf(stderr, "\n");
-
     for (int i = 0; i < state->stream.count; i++) {
         if (i == state->spc) {
             fprintf(stderr, "[*%i]", state->stream.values[i]);
@@ -75,6 +53,9 @@ int main(int argc, const char *argv[]) {
     // Run eval on a piece of code, manipulating state and returning a result.
     Result result = eval(&state, code, data);
 
+    // Vizualize state.
+    printState(&state);
+
     // Handle result, report errors and set exit code based on those.
     switch (result) {
         case RESULT_OK: {
@@ -120,9 +101,6 @@ int main(int argc, const char *argv[]) {
             break;
         }
     }
-
-    // Vizualize state.
-    printState(&state);
 
     // Free state.
     freeState(&state);
