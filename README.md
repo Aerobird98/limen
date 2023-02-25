@@ -363,6 +363,10 @@ To multiply a value on one location with another on the left:
 
 ## Contributing
 
+```brainfuck
+++++[>>+++++++++<<-]>>[<<++>>-]<<.>>+++[<+++++++++>-]<++[<+>-]<.>++[<+++>-]<+.>++[<++>-]<.
+```
+
 This repository is mostly read-only. I’m not a full-time developer just a hobbist, but if you like this lil’ implementation and want to improve upon things here, please don’t hesitate to **file an issue** or **open a pull-request**.
 
 I would be glad if this could be useful for someone.
