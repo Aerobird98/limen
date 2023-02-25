@@ -29,19 +29,20 @@
     #include <stdio.h>
 #endif
 
-// TODO: Not all of these are in use.
-#define MEMORY_MAX           65535
-#define ARRAY_CAPACITY_MAX   32767
+#define MEMORY_MAX           65535  // TODO: Not used.
+#define ARRAY_CAPACITY_MAX   32767  // TODO: Not used.
 #define ARRAY_COUNT_MAX      30000
 #define ARRAY_GROW_THRESHOLD 8
 #define ARRAY_GROW_FACTOR    2
 #define VALUE_MAX            127
 
-// TODO: Not all of these are in use.
 typedef enum eResult {
-    RESULT_OK,                   // Everything went fine.
-    RESULT_MISMATCHED_COMMAS,    // Commas do not match. Every comma should have a corresponding
-                                 // character in user data. Their numbers must match.
+    RESULT_OK,                 // Everything went fine.
+    RESULT_MISMATCHED_PARENS,  // Parens do not match. They wrap comment characters. Every
+                               // right-paren should have a corresponding left-paren. Their numbers
+                               // must match.
+    RESULT_MISMATCHED_COMMAS,  // Commas do not match. Every comma should have a corresponding
+                               // character in user data. Their numbers must match.
     RESULT_MISMATCHED_BRACKETS,  // brackets do not match. Every opening bracket should have a
                                  // corresponding closing bracket in user code. Their numbers must
                                  // match.
@@ -49,8 +50,8 @@ typedef enum eResult {
                              // went above those values.
     RESULT_ARRAY_UNDERFLOW,  // An Array erased a NULL value or its pointer offset went
                              // below zero.
-    RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory.
-    RESULT_UNKNOWN,            // Something went wrong.
+    RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory. TODO: Not used.
+    RESULT_UNKNOWN,            // Something went wrong and do not know why.
 } Result;
 
 #if DEBUG >= 1
@@ -100,7 +101,7 @@ typedef unsigned char Byte;
 //
 // TODO: This implementation could run into issues if the count or capacity value
 //       overflows an int. It sould be quite rare, yet consider limiting capacity
-//       and count.
+//       and count at this level.
 typedef struct sByteArray {
     int count;
     int capacity;
@@ -129,8 +130,9 @@ typedef struct sState {
               // pointer is.
     int spc;  // Stream pointer offset or stream counter. Counts where the stream pointer is.
 
-    int brackets;  // Mismatched bracket count for error checks and loop management.
+    int parens;    // Mismatched paren count for error checks.
     int commas;    // Mismatched comma count for error checks.
+    int brackets;  // Mismatched bracket count for error checks and loop management.
 } State;
 
 void initState(State *state);

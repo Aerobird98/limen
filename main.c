@@ -39,10 +39,10 @@ int main(int argc, const char *argv[]) {
     //
     // NOTE: Calling eval before initializing or mutiple times after initialization without an
     //       inbetween free call, freeing state before initializing or initializing twice or more
-    //       before or after freeing all causes undefined behavior. When we free the state, we also
-    //       reinitialize it to its default values, so it is safe to call free multiple times after
-    //       initialization; but do not ever try to call eval twice or more on a state without
-    //       inbetween freeing it; that causes undefined behavior.
+    //       before or after freeing all causes undefined behavior. However when we free the state,
+    //       we also reinitialize it to its default values, so it is safe to call free multiple
+    //       times after initialization; but do not ever try to call eval twice or more on a state
+    //       without inbetween freeing it; that still causes undefined behavior.
 
     // Declare state.
     State state;
@@ -62,6 +62,12 @@ int main(int argc, const char *argv[]) {
             fprintf(stdout, "%s\n", state.response.values);
             // Set exit code to EX_OK: Successful evaluation.
             ex = 0;
+            break;
+        }
+        case RESULT_MISMATCHED_PARENS: {
+            fprintf(stderr, "Error: Mismatched parens.\n");
+            // Set exit code to EX_DATAERR: The input data was incorrect.
+            ex = 65;
             break;
         }
         case RESULT_MISMATCHED_COMMAS: {

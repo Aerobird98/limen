@@ -83,8 +83,9 @@ void initState(State *state) {
     state->ipc = 0;
     state->spc = 0;
 
-    state->brackets = 0;
+    state->parens = 0;
     state->commas = 0;
+    state->brackets = 0;
 }
 
 void freeState(State *state) {
@@ -101,8 +102,9 @@ void freeState(State *state) {
     state->ipc = 0;
     state->spc = 0;
 
-    state->brackets = 0;
+    state->parens = 0;
     state->commas = 0;
+    state->brackets = 0;
 }
 
 #if DEBUG > 0
@@ -146,10 +148,10 @@ static void debugPrintResponse(State *state) {
 #endif
 
 Result eval(State *state, const Byte *code, const Byte *data) {
-    // Parse-Compile-time.
+    // Lex-Parse-Compile time.
     //
-    // At this phase we parse user code into validated instructions. Effectively Compiling it
-    // into a safe-to-run run-time representation while optimizing user code where possible; also
+    // At this phase we lex and parse user code into validated instructions. Effectively Compiling
+    // it into a safe-to-run run time representation while optimizing user code where possible; also
     // parse user data into a validated prompt.
 
     // Copy user data into the prompt array, character by character, stop if the current character
@@ -178,8 +180,36 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     while (*code != '\0') {
         // Skip non ASCII characters.
         if (*code <= 127 && *code >= 32) {
-            // Skip every character besides the eight instructions.
+            // Skip every characters besides the eight instructions.
             switch (*code) {
+                case '(': {
+                    code++;
+                    state->parens++;
+                    while (state->parens != 0) {
+                        if (*code == '\0') {
+                            break;
+                        }
+
+                        if (*code == '(') {
+                            code++;
+                            state->parens++;
+                            continue;
+                        }
+
+                        if (*code == ')') {
+                            code++;
+                            state->parens--;
+                            continue;
+                        }
+
+                        code++;
+                    }
+                    continue;
+                }
+                case ')': {
+                    state->parens--;
+                    break;
+                }
                 case '+': {
                     writeByteArray(&state->instructions, '+');
                     break;
@@ -238,6 +268,15 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     // Set SP to point at the first value on the stream.
     state->sp = &state->stream.values[0];
 
+    // If there are mismatched parens.
+    if (state->parens != 0) {
+        // Set the paren counter back to zero.
+        state->parens = 0;
+
+        // Error out.
+        return RESULT_MISMATCHED_PARENS;
+    }
+
     // If there are mismatched commas.
     if (state->commas != 0) {
         // Set the comma counter back to zero.
@@ -256,7 +295,7 @@ Result eval(State *state, const Byte *code, const Byte *data) {
         return RESULT_MISMATCHED_BRACKETS;
     }
 
-    // Run-time.
+    // Run time.
     //
     // At this phase we run validated instructions evaluating them into a response. Effectively
     // manipulating the stream and altering state.
@@ -359,7 +398,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                         if (*state->ip == '[') {
                             // Increment the bracket counter.
                             state->brackets++;
-                        } else if (*state->ip == ']') {
+                        }
+
+                        if (*state->ip == ']') {
                             // If the current instruction is a ]. Decrement the bracket counter.
                             state->brackets--;
                         }
@@ -390,8 +431,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                         if (*state->ip == ']') {
                             // Increment the bracket counter.
                             state->brackets++;
+                        }
 
-                        } else if (*state->ip == '[') {
+                        if (*state->ip == '[') {
                             // If the current instruction is a [. Decrement the bracket counter.
                             state->brackets--;
                         }
