@@ -30,7 +30,9 @@ Brainfuck uses a machine model consisting of an _infinite_ stream of one-byte va
 
 `]` – If the value at the stream pointer is not 0, jumps to the matching `[`.
 
-In the end, a program is just a series of instructions. Characters besides the eight `+-<>[],.` instructions considered as comments. The eight `+-<>[],.` instructions cannot be used as comment-characters. However if you want to use the entire set of available characters wrap them up in `( )` parenthesis, courtesy of Limen. They function much like `/* */` block comments in C and other languages, but unlike those, block comments can nest here. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments.
+In the end, a program is just a series of instructions. Characters besides the eight `+-<>[],.` instructions considered as comments.
+
+The eight instructions cannot be used as comment-characters. However if you want to use the entire set of available ASCII characters in your comments wrap them up in `( )` parenthesis, courtesy of Limen. They function much like `/* */` block comments in C and other languages, but unlike those, block comments can nest here. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments. They need to be properly terminated.
 
 ## Implementation
 
@@ -50,11 +52,14 @@ Limen is **encoding agnostic**, user code and data are validated to only contain
 
 Limen is made to be **embedable**, implemented as a small C _library_ consisting of only a `.c` and an `.h` file; written in ANSI C with **NO** dependencies other than a _few_ C standard library functions.
 
-You only need two files to include in your program, the `limen.c` file and `limen.h` file. Copy those and you are good to go. Import the `limen.h` file to access the implementation.
+You only need two files to include in your program, the `limen.c` file and `limen.h` file. Copy those and you are good to go. Include the `limen.h` file in your code to access the implementation.
 
 In its most simple form you only need to:
 
 ```c
+// Include header file.
+#include "limen.h"
+
 // Declare state.
 State state;
 
@@ -90,7 +95,7 @@ Limen lives on [Github](). To play around with it, sync it down then:
   If everything goes well, you will see an empty stream and all the ASCII characters in the range of `32-127`.
 
   ```
-  [*0]
+  [*0][0]
   !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
   ```
 
@@ -187,7 +192,7 @@ To this:
 
 ### Input & Output
 
-Behold an ASCII table. It contains all the possible values and characters that could exist in Brainfuck.
+Behold an ASCII table. It contains all the possible values and their corresponding characters that could exist in Brainfuck.
 
 | value | character | value | character | value | character | value | character |
 | ----- | --------- | ----- | --------- | ----- | --------- | ----- | --------- |
@@ -236,6 +241,8 @@ When you use an `.` instruction now, it prints a lowercase `a`. If the value whe
 
 An `,` instruction works the opposite, it reads a character from the provided user data or prompt and sets the value where the pointer is to its corresponding ASCII value.
 
+Every `,` instruction should have a corresponding character in user data. Their numbers must match.
+
 Imagine the prompt as:
 
 ```
@@ -280,7 +287,7 @@ A
 
 ### Loop
 
-A loop consists of an opening `[` instruction and a closing `]` instruction. Imagine them like a body of a `while` loop in C where the condition corresponds to the value where the pointer is. A value of zero terminates the loop while any other value makes sure it goes on.
+A loop consists of an opening `[` instruction and a closing `]` instruction. They need to be properly terminated. Imagine them like a body of a `while` loop in C where the condition corresponds to the value where the pointer is. A value of zero terminates the loop while any other value makes sure it goes on.
 
 Imagine your program as:
 
@@ -291,7 +298,9 @@ Imagine your program as:
 At run-time the stream looks like this:
 
 ```
-[*2][0][0][0][0]...
+[*2][0][0][0][0]...        First iteration opens loop.
+[*2][0][0][0][0]...        Second iteration goes on.
+[*2][0][0][0][0]...        Third iteration still goes on...
 ```
 
 To explain, that program increments the value where the pointer is by two and opens a loop that corresponds to `while (2) {}` in C, an infinite loop that goes on forever.
