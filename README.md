@@ -30,9 +30,7 @@ Brainfuck uses a machine model consisting of an _infinite_ stream of one-byte va
 
 `]` – If the value at the stream pointer is not 0, jumps to the matching `[`.
 
-In the end, a program is just a series of instructions. Characters besides the eight `+-<>[],.` instructions considered as comments.
-
-The eight instructions cannot be used as comment-characters. However if you want to use the entire set of available ASCII characters in your comments wrap them up in `( )` parenthesis, courtesy of Limen. They function much like `/* */` block comments in C and other languages, but unlike those, block comments can nest here. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments. They need to be properly terminated.
+In the end, a program is just a series of instructions. Characters besides the eight `+-<>[],.` instructions considered as comments. You can also wrap them up in `( )` parenthesis, courtesy of Limen. They function much like `/* */` block comments in C and other languages, but unlike those, parenthesis can nest here. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments. They need to be properly terminated.
 
 ## Implementation
 
