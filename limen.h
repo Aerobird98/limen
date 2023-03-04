@@ -138,7 +138,7 @@ typedef struct sState {
 void initState(State *state);
 void freeState(State *state);
 
-// Evaluate provided user code into a response.
+// Evaluate provided user code into a response; Alter state and give back a result.
 Result eval(State *state, const Byte *code, const Byte *data);
 
 #endif

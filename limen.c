@@ -183,30 +183,42 @@ Result eval(State *state, const Byte *code, const Byte *data) {
             // Skip every characters besides the eight instructions.
             switch (*code) {
                 case '(': {
+                    // Step one character.
                     code++;
+                    // Increment the paren counter.
                     state->parens++;
+                    // Skip characters while the paren counter is not zero.
                     while (state->parens != 0) {
+                        // Stop at the NULL character.
                         if (*code == '\0') {
                             break;
                         }
 
+                        // If the current character is a (.
                         if (*code == '(') {
+                            // Step one character.
                             code++;
+                            // Increment the paren counter.
                             state->parens++;
                             continue;
                         }
 
+                        // If the current character is a ).
                         if (*code == ')') {
+                            // Step one character.
                             code++;
+                            // Decrement the paren counter.
                             state->parens--;
                             continue;
                         }
 
+                        // Step one character.
                         code++;
                     }
                     continue;
                 }
                 case ')': {
+                    // Decrement the paren counter.
                     state->parens--;
                     break;
                 }
@@ -400,8 +412,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                             state->brackets++;
                         }
 
+                        // If the current instruction is a ].
                         if (*state->ip == ']') {
-                            // If the current instruction is a ]. Decrement the bracket counter.
+                            // Decrement the bracket counter.
                             state->brackets--;
                         }
 
@@ -433,8 +446,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                             state->brackets++;
                         }
 
+                        // If the current instruction is a [.
                         if (*state->ip == '[') {
-                            // If the current instruction is a [. Decrement the bracket counter.
+                            // Decrement the bracket counter.
                             state->brackets--;
                         }
 
