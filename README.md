@@ -32,8 +32,6 @@ Brainfuck uses a machine model consisting of an _infinite_ stream of one-byte va
 
 In the end, a program is just a series of instructions. Characters besides the eight `+-<>[],.` instructions considered as comments.
 
-You can wrap comments up in `( )` parenthesis, courtesy of Limen. They function much like `/* */` block-comments in C and other languages, but unlike those, parenthesis can nest here. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments. They need to be properly terminated.
-
 ## Implementation
 
 Limen is written ex nihilo and stands for a compact, secure and reliable library and interpreter for this remarkable language.
@@ -128,13 +126,25 @@ If you move the pointer right with an `>` instruction, it moves from value `x` t
 [0][*0][0][0]...
 ```
 
-And if you move it back left with an `<` instruction, it moves from value `x` to value `x - 1`:
+If you move it right again:
+
+```
+[0][0][*0][0]...
+```
+
+And if you move it left with an `<` instruction, it moves from value `x` to value `x - 1`:
+
+```
+[0][*0][0][0]...
+```
+
+If you move it left again:
 
 ```
 [*0][0][0][0]...
 ```
 
-If you move it again left with an `<` instruction, it terminates your program with an error:
+And left again with an `<` instruction, it terminates your program with an error:
 
 ```
 Error: Array underflow.
@@ -335,6 +345,15 @@ It corresponds to `int x = 1; int y = 0; while (x) { x = y; }` in C. At run-time
 ```
 
 To explain, that program increments the value where the pointer is by one, opens a loop, moves the pointer right and since the value where the pointer is now zero, terminates the loop. This demonstrates that you do not need to close the loop at the value where it openned. However that makes the location of the pointer less deterministic.
+
+### Comments
+
+You can wrap comments up in `( )` parenthesis, courtesy of Limen. Among other uses, they are useful to comment out unneeded code. They function much like `/* */` block-comments in C and other languages, but unlike those, parenthesis can nest here and they need to be properly terminated. This is handy because it lets us easily comment out an entire block of code, even if it already contains block-comments:
+
+```brainfuck
+(This is a comment)
+(This (is (a nested (comment))))
+```
 
 ### Tricks
 

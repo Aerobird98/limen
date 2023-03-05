@@ -52,7 +52,12 @@ void initByteArray(ByteArray *array) {
 void writeByteArray(ByteArray *array, Byte value) {
     if (array->capacity < array->count + 1) {
         int capacity = array->capacity;
-        array->capacity = GROW_CAPACITY(capacity);
+
+        if (capacity < ARRAY_GROW_THRESHOLD) {
+            array->capacity = ARRAY_GROW_THRESHOLD;
+        } else {
+            array->capacity = capacity * ARRAY_GROW_FACTOR;
+        }
 
         array->values = GROW_ARRAY(Byte, array->values, capacity, array->capacity);
     }
@@ -150,9 +155,9 @@ static void debugPrintResponse(State *state) {
 Result eval(State *state, const Byte *code, const Byte *data) {
     // Lex-Parse-Compile time.
     //
-    // At this phase we lex and parse user code into validated instructions. Effectively Compiling
-    // it into a safe-to-run run time representation while optimizing user code where possible; also
-    // parse user data into a validated prompt.
+    // At this phase we lex and parse user code right into validated instructions. Effectively
+    // Compiling it into a safe-to-run run time representation while optimizing user code where
+    // possible; also parse user data into a validated prompt.
 
     // Copy user data into the prompt array, character by character, stop if the current character
     // is the NULL character.
@@ -340,6 +345,8 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                 // If we moved outside the stream.
                 if (state->stream.count <= state->spc) {
                     // If we reached the maximum stream count.
+                    //
+                    // TODO: Consider limiting at the dynamic array implementation level.
                     if (state->spc > ARRAY_COUNT_MAX) {
                         // Decrement the stream counter.
                         state->spc--;

@@ -29,9 +29,9 @@
     #include <stdio.h>
 #endif
 
-#define MEMORY_MAX           65535  // TODO: Not used.
-#define ARRAY_CAPACITY_MAX   32767  // TODO: Not used.
-#define ARRAY_COUNT_MAX      30000
+#define MEMORY_MAX           65535  // TODO: Not used. Use it!
+#define ARRAY_CAPACITY_MAX   32767  // TODO: Not used. Use it!
+#define ARRAY_COUNT_MAX      30000  // TODO: It is used but at the wrong level of implementation.
 #define ARRAY_GROW_THRESHOLD 8
 #define ARRAY_GROW_FACTOR    2
 #define VALUE_MAX            127
@@ -50,7 +50,7 @@ typedef enum eResult {
                              // went above those values.
     RESULT_ARRAY_UNDERFLOW,  // An Array erased a NULL value or its pointer offset went
                              // below zero.
-    RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory. TODO: Not used.
+    RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory. TODO: Not used. Use it!
     RESULT_UNKNOWN,            // Something went wrong and do not know why.
 } Result;
 
@@ -76,16 +76,15 @@ extern size_t bytes;
 //   should return NULL.
 //
 // TODO: Consider limiting memory usage. A reasonable maximum could be defined
-//       trough usage tests.
+//       trough frequent usage tests.
 void *reallocate(void *memory, size_t was, size_t will);
 
-#define ALLOCATE(type)                 (type *)reallocate(NULL, 0, sizeof(type))
-#define GROW(type, memory, will)       (type *)realocate(memory, sizeof(type), will)
-#define SRINK(type, memory, will)      GROW(type, memory, will)
-#define FREE(type, memory)             reallocate(memory, sizeof(type), 0)
+#define ALLOCATE(type)            (type *)reallocate(NULL, 0, sizeof(type))
+#define GROW(type, memory, will)  (type *)realocate(memory, sizeof(type), will)
+#define SRINK(type, memory, will) GROW(type, memory, will)
+#define FREE(type, memory)        reallocate(memory, sizeof(type), 0)
+
 #define ALLOCATE_ARRAY(type, capacity) (type *)reallocate(NULL, 0, sizeof(type) * (capacity))
-#define GROW_CAPACITY(capacity) \
-    ((capacity) < ARRAY_GROW_THRESHOLD ? ARRAY_GROW_THRESHOLD : (capacity) * (ARRAY_GROW_FACTOR))
 #define GROW_ARRAY(type, memory, count, capacity) \
     (type *)reallocate(memory, sizeof(type) * (count), sizeof(type) * (capacity))
 #define SRINK_ARRAY(type, memory, count, capacity) GROW_ARRAY(type, memory, count, capacity)
@@ -101,7 +100,7 @@ typedef unsigned char Byte;
 //
 // TODO: This implementation could run into issues if the count or capacity value
 //       overflows an int. It sould be quite rare, yet consider limiting capacity
-//       and count at this level.
+//       and count at this implementation level.
 typedef struct sByteArray {
     int count;
     int capacity;
@@ -138,7 +137,9 @@ typedef struct sState {
 void initState(State *state);
 void freeState(State *state);
 
-// Evaluate provided user code into a response; Alter state and give back a result.
+// Evaluate provided user code and data into a response.
+//
+// NOTE: Alter state and give back a result.
 Result eval(State *state, const Byte *code, const Byte *data);
 
 #endif
