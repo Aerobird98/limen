@@ -247,7 +247,7 @@ Imagine the stream as:
 [*97][0][0][0][0]...
 ```
 
-When you use an `.` instruction now, it prints a lowercase `a`. If the value where the pointer is would be `66` it would print an uppercase `A`, etc..
+When you use an `.` instruction now, it prints a lowercase `a`. If the value where the pointer is, would be `65` it would print an uppercase `A`, etc..
 
 An `,` instruction works the opposite, it reads a character from the provided user data or prompt and sets the value where the pointer is to its corresponding ASCII value.
 
@@ -286,7 +286,7 @@ Move the pointer to the right with an `>` instruction and the stream becomes:
 And use an `,` instruction again, the stream will be:
 
 ```
-[97][*66][0][0][0]...
+[97][*65][0][0][0]...
 ```
 
 If you use an `.` instruction now, it prints:
