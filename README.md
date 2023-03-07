@@ -1,7 +1,7 @@
 # Limen
 
 ```brainfuck
-++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]
+++++[>>+++++++++<<-]>>[<<++>>-]<<.>>+++[<+++++++++>-]<++[<+>-]<.>++[<+++>-]<+.>++[<++>-]<.
 ```
 
 Limen means _threshold_ in latin. Limen is Brainfuck which is a turing complete **esoteric** programming language invented in _1992_ by Urban Müller, in an attempt to make a language for which he could write the smallest possible compiler. Its name is a reference to the _slang_ term _brainfuck_, which refers to things so **complicated** or **unusual** that they exceed the limits of one's understanding and it is certain that one would realy need to cross a cretain _threshold_ in order to use this language.
@@ -42,7 +42,7 @@ Limen is written ex nihilo and stands for a compact, secure and reliable library
 
 - **It’s fast and efficient.** – Splits evaluation into lex-parse-compile- and run time; it does all the validation and optimization at lex-parse-compile- while at run time only checks for memory- and stream management errors.
 
-- **It’s made in the name of science!** – Comes with a **REPL** — an iteractive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason why Brainfuck exists in the first place. (Comming soon.)
+- **It’s made in the name of science!** – Comes with a **REPL** — an interactive environment that vizualizes the stream and its pointer before every evaluation which makes it well suited for learning and experimentation which is the main reason why Brainfuck exists in the first place. (Comming soon.)
 
 Limen is **encoding agnostic**, user code and data are validated to only contain standard **ASCII** characters in the range of `0-127`. While I admit that it is rather strange, it does make the implementation more secure and reliable which was key troughout development. All other characters are ignored.
 
@@ -80,7 +80,7 @@ freeState(&state);
 
 For a more complete usage-sample, consult with the `main.c` file which contains an implementation of a possible interpreter.
 
-## Get, Compile & Conquer
+## Building
 
 Limen lives on [Github](). To play around with it, sync it down then:
 
@@ -90,11 +90,11 @@ Limen lives on [Github](). To play around with it, sync it down then:
 - Go back and copy the `<code>` at the head of this `README`, `<data>` is only needed when you want to use the `,` instruction in your code otherwise leave it empty.
 - Run `limen <code> <data>`.
 
-  If everything goes well, you will see an empty stream and all the ASCII characters in the range of `32-127`.
+  If everything goes well, you will see the stream and a text that says `Help`.
 
   ```
-  [*0][0]
-  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+  [*112][0][0]
+  Help
   ```
 
   Without *argument*s, it drops you into a **REPL** — an interactive session. You can type in instructions and it will evaluate them immediately while vizualizes the stream and its pointer before every evaluation. (Comming soon.)
@@ -102,7 +102,7 @@ Limen lives on [Github](). To play around with it, sync it down then:
 - Run `make clean` to clean all built files.
 - Run `make uninstall` if you are not satisfied enough.
 
-## Learning & Experimentation
+## Usage
 
 This section covers the usage of the language according to my implementation.
 
@@ -200,7 +200,7 @@ To this:
 [*0][0][0][0]...
 ```
 
-### Input & Output
+### Input and Output
 
 Behold an ASCII table. It contains all the possible values and their corresponding characters that could exist in Brainfuck.
 
@@ -390,10 +390,6 @@ To multiply a value on one location with another on the left:
 ```
 
 ## Contributing
-
-```brainfuck
-++++[>>+++++++++<<-]>>[<<++>>-]<<.>>+++[<+++++++++>-]<++[<+>-]<.>++[<+++>-]<+.>++[<++>-]<.
-```
 
 This repository is mostly read-only. I’m not a full-time developer just a hobbist, but if you like this lil’ implementation and want to improve upon things here, please don’t hesitate to **file an issue** or **open a pull-request**.
 
