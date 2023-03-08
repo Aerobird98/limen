@@ -4,7 +4,7 @@
 ++++[>>+++++++++<<-]>>[<<++>>-]<<.>>+++[<+++++++++>-]<++[<+>-]<.>++[<+++>-]<+.>++[<++>-]<.
 ```
 
-Limen means _threshold_ in latin. Limen is Brainfuck which is a turing complete **esoteric** programming language invented in _1992_ by Urban Müller, in an attempt to make a language for which he could write the smallest possible compiler. Its name is a reference to the _slang_ term _brainfuck_, which refers to things so **complicated** or **unusual** that they exceed the limits of one's understanding and it is certain that one would realy need to cross a cretain _threshold_ in order to use this language.
+Limen means _threshold_ in latin. Limen is Brainfuck which is a turing complete **esoteric** programming language invented in _1992_ by Urban Müller, in an attempt to make a language for which he could write the smallest possible implementation. Its name is a reference to the _slang_ term _brainfuck_, which refers to things so **complicated** or **unusual** that they exceed the limits of one's understanding and it is certain that one would realy need to cross a cretain _threshold_ in order to use this language.
 
 Brainfuck is notable for its **minimalism**. At the core of the language is a more-than-compact instruction set, comprising of **8** simple **instructions**, yet in theory with some creative thinking and the ability to break down complex tasks into microscopic steps you are more than capable of writing almost any program one can think of.
 
