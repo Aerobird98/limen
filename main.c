@@ -18,8 +18,7 @@ int main(int argc, const char *argv[]) {
     // Define exit code as EX_OK: Successful evaluation.
     int ex = 0;
 
-    // TODO: Implement the REPL. We need something like the uv library (libuv) to have consistent
-    //       behavior arcoss operating systems.
+    // TODO: Implement the REPL.
 
     // If there are mismatched command-line arguments.
     if (argc < 3 || argc > 3) {
