@@ -132,14 +132,14 @@ typedef struct sState {
     int parens;    // Mismatched paren count for error checks.
     int commas;    // Mismatched comma count for error checks.
     int brackets;  // Mismatched bracket count for error checks and loop management.
+
+    Result result;  // Result of evaluation.
 } State;
 
 void initState(State *state);
 void freeState(State *state);
 
-// Evaluate provided user code and data into a response.
-//
-// NOTE: Alter state and give back a result.
-Result eval(State *state, const Byte *code, const Byte *data);
+// Evaluate provided user code and data into a response; alters state.
+void eval(State *state, const Byte *code, const Byte *data);
 
 #endif

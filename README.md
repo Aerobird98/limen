@@ -64,14 +64,14 @@ State state;
 // Initialize state.
 initState(&state);
 
-// Run eval on a piece of code, manipulating state and returning a result.
-Result result = eval(&state, "++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]", "");
+// Run eval on a piece of code, altering state.
+eval(&state, "++++[>++++<-]>[<+>-]<[>++<-]>[<+>-]<.[+.]", "");
 
-// Handle result, visualize state, etc.
-if (result == RESULT_OK) {
+// Check result, visualize response, report errors, etc..
+if (state.result == RESULT_OK) {
     fprintf(stdout, "%s\n", state.response.values);
 } else {
-    fprintf(stderr, "Error: Unhandled error.");
+    fprintf(stderr, "Error: Unknown error.");
 }
 
 // Free state.

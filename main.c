@@ -2,32 +2,17 @@
 
 #include "limen.h"
 
-static void printState(State *state) {
-    for (int i = 0; i < state->stream.count; i++) {
-        if (i == state->spc) {
-            fprintf(stderr, "[*%i]", state->stream.values[i]);
-        } else {
-            fprintf(stderr, "[%i]", state->stream.values[i]);
-        }
-    }
-
-    fprintf(stderr, "\n");
-}
-
 int main(int argc, const char *argv[]) {
     // Define exit code as EX_OK: Successful evaluation.
     int ex = 0;
 
-    // TODO: Implement the REPL.
-
-    // If there are mismatched command-line arguments.
-    if (argc < 3 || argc > 3) {
+    if (argc > 3 || argc < 3) {
         fprintf(stderr, "Usage: %s <code> <data>\n", argv[0]);
         // Set exit code to EX_USAGE: The command was used incorrectly.
         ex = 64;
-        // Return exit code.
-        return ex;
     }
+
+    // TODO: Implement the REPL.
 
     // User code is the first command-line argument.
     const Byte *code = (const Byte *)argv[1];
@@ -36,12 +21,7 @@ int main(int argc, const char *argv[]) {
 
     // TODO: Handle bad library usage.
     //
-    // NOTE: Calling eval before initializing or mutiple times after initialization without an
-    //       inbetween free call, freeing state before initializing or initializing twice or more
-    //       before or after freeing all causes undefined behavior. However when we free the state,
-    //       we also reinitialize it to its default values, so it is safe to call free multiple
-    //       times after initialization; but do not ever try to call eval twice or more on a state
-    //       without inbetween freeing it; that still causes undefined behavior.
+    // NOTE: Order matters.
 
     // Declare state.
     State state;
@@ -49,15 +29,21 @@ int main(int argc, const char *argv[]) {
     // Initialize state.
     initState(&state);
 
-    // Run eval on a piece of code, manipulating state and returning a result.
-    Result result = eval(&state, code, data);
+    // Run eval on a piece of code, altering state.
+    eval(&state, code, data);
 
-    // Vizualize state.
-    printState(&state);
-
-    // Handle result, report errors and set exit code based on those.
-    switch (result) {
+    // Check result, visualize response, report errors and set exit code based on what happened.
+    switch (state.result) {
         case RESULT_OK: {
+            // Visualize state.
+            for (int i = 0; i < state.stream.count; i++) {
+                if (i == state.spc) {
+                    fprintf(stderr, "[*%i]", state.stream.values[i]);
+                } else {
+                    fprintf(stderr, "[%i]", state.stream.values[i]);
+                }
+            }
+            fprintf(stderr, "\n");
             fprintf(stdout, "%s\n", state.response.values);
             // Set exit code to EX_OK: Successful evaluation.
             ex = 0;
@@ -109,6 +95,10 @@ int main(int argc, const char *argv[]) {
 
     // Free state.
     freeState(&state);
+
+    // NOTE: After `freeState`, you can call `eval` once again, because freeing state also
+    //       re-initializes it to its initial values; No need to call `initState` more than once on
+    //       any given state.
 
     // Return exit code.
     return ex;

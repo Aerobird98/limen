@@ -31,9 +31,9 @@ void *reallocate(void *memory, size_t was, size_t will) {
     bytes += will - was;
 #endif
 
-    // The behavior of realloc() when the size is 0 is implementation defined. It
-    // may return a non-NULL pointer which must not be dereferenced but nevertheless
-    // should be freed. To prevent that, we avoid calling realloc() with a zero size.
+    // NOTE: The behavior of realloc() when the size is 0 is implementation defined. It may return a
+    //       non-NULL pointer which must not be dereferenced but nevertheless should be freed. To
+    //       prevent that, we avoid calling realloc() with a zero size.
     if (will == 0) {
         free(memory);
         return NULL;
@@ -91,6 +91,8 @@ void initState(State *state) {
     state->parens = 0;
     state->commas = 0;
     state->brackets = 0;
+
+    state->result = RESULT_UNKNOWN;
 }
 
 void freeState(State *state) {
@@ -110,6 +112,8 @@ void freeState(State *state) {
     state->parens = 0;
     state->commas = 0;
     state->brackets = 0;
+
+    state->result = RESULT_UNKNOWN;
 }
 
 #if DEBUG > 0
@@ -152,7 +156,7 @@ static void debugPrintResponse(State *state) {
 }
 #endif
 
-Result eval(State *state, const Byte *code, const Byte *data) {
+void eval(State *state, const Byte *code, const Byte *data) {
     // Lex-Parse-Compile time.
     //
     // At this phase we lex and parse user code right into validated instructions. Effectively
@@ -185,7 +189,7 @@ Result eval(State *state, const Byte *code, const Byte *data) {
     while (*code != '\0') {
         // Skip non ASCII characters.
         if (*code <= 127 && *code >= 32) {
-            // Skip every characters besides the eight instructions.
+            // Skip every character besides the eight instructions.
             switch (*code) {
                 case '(': {
                     // Step one character.
@@ -290,8 +294,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
         // Set the paren counter back to zero.
         state->parens = 0;
 
-        // Error out.
-        return RESULT_MISMATCHED_PARENS;
+        // Error.
+        state->result = RESULT_MISMATCHED_PARENS;
+        return;
     }
 
     // If there are mismatched commas.
@@ -299,8 +304,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
         // Set the comma counter back to zero.
         state->commas = 0;
 
-        // Error out.
-        return RESULT_MISMATCHED_COMMAS;
+        // Error.
+        state->result = RESULT_MISMATCHED_COMMAS;
+        return;
     }
 
     // If there are mismatched brackets.
@@ -308,8 +314,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
         // Set the bracket counter back to zero.
         state->brackets = 0;
 
-        // Error out.
-        return RESULT_MISMATCHED_BRACKETS;
+        // Error.
+        state->result = RESULT_MISMATCHED_BRACKETS;
+        return;
     }
 
     // Run time.
@@ -351,8 +358,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                         // Decrement the stream counter.
                         state->spc--;
 
-                        // Error out.
-                        return RESULT_ARRAY_OVERFLOW;
+                        // Error.
+                        state->result = RESULT_ARRAY_OVERFLOW;
+                        return;
                     }
 
                     // Grow the stream by writing a Null character.
@@ -373,8 +381,9 @@ Result eval(State *state, const Byte *code, const Byte *data) {
                     // Set the stream counter back to zero.
                     state->spc = 0;
 
-                    // Error out.
-                    return RESULT_ARRAY_UNDERFLOW;
+                    // Error.
+                    state->result = RESULT_ARRAY_UNDERFLOW;
+                    return;
                 }
 
                 // Move the stream pointer backward on the stream.
@@ -492,5 +501,6 @@ Result eval(State *state, const Byte *code, const Byte *data) {
 #endif
 
     // Evaluation was successfull.
-    return RESULT_OK;
+    state->result = RESULT_OK;
+    return;
 }
