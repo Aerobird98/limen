@@ -19,6 +19,9 @@ DESTDIR ?= ~/../usr
 # Compiler flags.
 CFLAGS := -std=c99 -Wpedantic -Werror -Wall -Wextra -Wno-unused-parameter
 
+# Linker flags.
+LDFLAGS :=
+
 # Append addiional compiler flags based on DEBUG level.
 ifneq ($(GG),0)
 	CFLAGS += -Og -g3 -DDEBUG=$(GG)
@@ -29,6 +32,7 @@ endif
 # Directories.
 LIBDIR := $(DESTDIR)/lib
 BINDIR := $(DESTDIR)/bin
+INCDIR := $(DESTDIR)/include
 
 # Files.
 HEADERS := $(wildcard *.h)
@@ -39,9 +43,9 @@ OBJECTS := $(notdir $(SOURCES:.c=.o))
 %.o: %.c $(HEADERS)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
-# Link all the object files and libraries.
+# Link all object files.
 $(NM): $(OBJECTS)
-	@ $(CC) $(CFLAGS) $^ -o $@
+	@ $(CC) $(LDFLAGS) $^ -o $@
 
 # Build all targets.
 .PHONY: all
@@ -49,7 +53,7 @@ all: $(NM)
 
 # Install all built files.
 .PHONY: install
-install:
+install: $(NM)
 	@ $(CP) $(NM) $(BINDIR)/
 
 # Uninstall all built files.
