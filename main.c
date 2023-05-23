@@ -6,22 +6,34 @@ int main(int argc, const char *argv[]) {
     // Define exit code as EX_OK: Successful evaluation.
     int ex = 0;
 
-    if (argc > 3 || argc < 3) {
-        fprintf(stderr, "Usage: %s <code> <data>\n", argv[0]);
-        // Set exit code to EX_USAGE: The command was used incorrectly.
-        ex = 64;
+    // Declare user code and data.
+    const Byte *code;
+    const Byte *data;
+
+    switch (argc) {
+        case 1: {
+            // TODO: Implement the REPL.
+            code = (const Byte *)"";
+            data = (const Byte *)"";
+            break;
+        }
+        case 2: {
+            code = (const Byte *)argv[1];
+            data = (const Byte *)"";
+            break;
+        }
+        case 3: {
+            code = (const Byte *)argv[1];
+            data = (const Byte *)argv[2];
+            break;
+        }
+        default:
+            fprintf(stderr, "Usage: %s <code> <data>\n", argv[0]);
+            // Set exit code to EX_USAGE: The command was used incorrectly.
+            ex = 64;
+            // Return exit code.
+            return ex;
     }
-
-    // TODO: Implement the REPL.
-
-    // User code is the first command-line argument.
-    const Byte *code = (const Byte *)argv[1];
-    // User data is the second command-line argument.
-    const Byte *data = (const Byte *)argv[2];
-
-    // TODO: Handle bad library usage.
-    //
-    // NOTE: Order matters.
 
     // Declare state.
     State state;
@@ -95,10 +107,6 @@ int main(int argc, const char *argv[]) {
 
     // Free state.
     freeState(&state);
-
-    // NOTE: After `freeState`, you can call `eval` once again, because freeing state also
-    //       re-initializes it to its initial values; No need to call `initState` more than once on
-    //       any given state.
 
     // Return exit code.
     return ex;
