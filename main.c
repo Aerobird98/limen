@@ -10,6 +10,7 @@ int main(int argc, const char *argv[]) {
     const Byte *code;
     const Byte *data;
 
+    // Initialize user code and data, return early in case of incorrect usage.
     switch (argc) {
         case 1: {
             // TODO: Implement the REPL.
