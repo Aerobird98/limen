@@ -23,6 +23,10 @@
 #ifndef limen_h
 #define limen_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 
 #ifdef DEBUG
@@ -34,7 +38,7 @@
 #define ARRAY_COUNT_MAX      30000  // TODO: It is used but at the wrong level of implementation.
 #define ARRAY_GROW_THRESHOLD 8
 #define ARRAY_GROW_FACTOR    2
-#define VALUE_MAX            127
+#define VALUE_MAX            127  // TODO: It is used but at the wrong level of implementation.
 
 typedef enum eResult {
     RESULT_OK,                 // Everything went fine.
@@ -52,6 +56,7 @@ typedef enum eResult {
                              // below zero.
     RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory. TODO: Not used. Use it!
     RESULT_UNKNOWN,            // Something went wrong and do not know why.
+    RESULT_MAX,
 } Result;
 
 #if DEBUG >= 1
@@ -75,8 +80,8 @@ extern size_t bytes;
 // - To free memory, <memory> will be the memory to free and <will> and <was> will be zero. It
 //   should return NULL.
 //
-// TODO: Consider limiting memory usage. A reasonable maximum could be defined
-//       trough frequent usage tests.
+// TODO: Consider managing memory usage. A reasonable maximum could be defined trough frequent usage
+//       tests.
 void *reallocate(void *memory, size_t was, size_t will);
 
 #define ALLOCATE(type)            (type *)reallocate(NULL, 0, sizeof(type))
@@ -98,36 +103,25 @@ typedef unsigned char Byte;
 // A dynamic byte array implementation that uses the generic allocation function trough a series of
 // MACROS to grow when new values are written to it.
 //
-// TODO: This implementation could run into issues if the count or capacity value
-//       overflows an int. It sould be quite rare, yet consider limiting capacity
-//       and count at this implementation level.
+// TODO: This implementation could run into issues if the count, index or capacity value
+//       overflows an int. It sould be quite rare tough.
 typedef struct sByteArray {
-    int count;
-    int capacity;
-    Byte *values;
+    int count;      // How many values are in this array?
+    int index;      // Where are we in this array?
+    int capacity;   // How many memory is allocated for this array.
+    Byte *values;   // The values contained in this array.
+    Byte *pointer;  // Pointer pointing at the current value in this array.
 } ByteArray;
 
 void initByteArray(ByteArray *array);
 void writeByteArray(ByteArray *array, Byte value);
 void freeByteArray(ByteArray *array);
 
-// Store informations between evaluations.
-//
-// NOTE: This sould be read-only.
 typedef struct sState {
     ByteArray prompt;        // Validated prompt read from user data.
     ByteArray instructions;  // Validated instructions read from user code.
     ByteArray stream;        // Stream for the validated instructions to operate on.
     ByteArray response;      // Response of the validated instructions.
-
-    Byte *pp;  // Pointer pointing at the current value in the prompt.
-    Byte *ip;  // Pointer pointing at the current instruction.
-    Byte *sp;  // Pointer pointing at the current value on the stream.
-
-    int ppc;  // Prompt pointer offset or prompt counter. Counts where the prompt pointer is.
-    int ipc;  // Instructions pointer offset or instructions counter. Counts where the instructions
-              // pointer is.
-    int spc;  // Stream pointer offset or stream counter. Counts where the stream pointer is.
 
     int parens;    // Mismatched paren count for error checks.
     int commas;    // Mismatched comma count for error checks.
@@ -139,7 +133,11 @@ typedef struct sState {
 void initState(State *state);
 void freeState(State *state);
 
-// Evaluate provided user code and data into a response; alters state.
+// Evaluate provided user code and data into a response.
 void eval(State *state, const Byte *code, const Byte *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -44,9 +44,11 @@ void *reallocate(void *memory, size_t was, size_t will) {
 
 void initByteArray(ByteArray *array) {
     array->values = NULL;
+    array->pointer = NULL;
 
     array->capacity = 0;
     array->count = 0;
+    array->index = 0;
 }
 
 void writeByteArray(ByteArray *array, Byte value) {
@@ -69,9 +71,11 @@ void freeByteArray(ByteArray *array) {
     FREE_ARRAY(Byte, array->values, array->capacity);
 
     array->values = NULL;
+    array->pointer = NULL;
 
     array->capacity = 0;
     array->count = 0;
+    array->index = 0;
 }
 
 void initState(State *state) {
@@ -79,14 +83,6 @@ void initState(State *state) {
     initByteArray(&state->instructions);
     initByteArray(&state->stream);
     initByteArray(&state->response);
-
-    state->pp = NULL;
-    state->ip = NULL;
-    state->sp = NULL;
-
-    state->ppc = 0;
-    state->ipc = 0;
-    state->spc = 0;
 
     state->parens = 0;
     state->commas = 0;
@@ -100,14 +96,6 @@ void freeState(State *state) {
     freeByteArray(&state->instructions);
     freeByteArray(&state->stream);
     freeByteArray(&state->response);
-
-    state->pp = NULL;
-    state->ip = NULL;
-    state->sp = NULL;
-
-    state->ppc = 0;
-    state->ipc = 0;
-    state->spc = 0;
 
     state->parens = 0;
     state->commas = 0;
@@ -125,7 +113,7 @@ static void debugPrintInstructions(State *state) {
     fprintf(stderr, " %i %i\n", state->instructions.count, state->instructions.capacity);
 
     for (int i = 0; i < state->instructions.count; i++) {
-        if (i == state->ipc) {
+        if (i == state->instructions.index) {
             fprintf(stderr, "%c", '^');
         } else {
             fprintf(stderr, "%c", '-');
@@ -137,7 +125,7 @@ static void debugPrintInstructions(State *state) {
 
 static void debugPrintStream(State *state) {
     for (int i = 0; i < state->stream.count; i++) {
-        if (i == state->spc) {
+        if (i == state->stream.index) {
             fprintf(stderr, "[*%i]", state->stream.values[i]);
         } else {
             fprintf(stderr, "[%i]", state->stream.values[i]);
@@ -163,8 +151,8 @@ void eval(State *state, const Byte *code, const Byte *data) {
     // Compiling it into a safe-to-run run time representation while optimizing user code where
     // possible; also parse user data into a validated prompt.
 
-    // Copy user data into the prompt array, character by character, stop if the current character
-    // is the NULL character.
+    // Copy user data into the prompt array, validate it, character by character, stop if the
+    // current character is the NULL character.
     while (*data != '\0') {
         // Skip non ASCII characters.
         if (*data <= 127 && *data >= 32) {
@@ -180,8 +168,8 @@ void eval(State *state, const Byte *code, const Byte *data) {
     // Terminate the prompt array by writing a NULL character.
     writeByteArray(&state->prompt, '\0');
 
-    // Copy user code into the instructions array, character by character, stop if the current
-    // character is the NULL character.
+    // Copy user code into the instructions array, validate it, character by character, stop if the
+    // current character is the NULL character.
     //
     // NOTE: As an optimization, instead of copying characters, write opcodes, they enable
     //       parse-compile-time optimizations; writing a special opcode that replaces a sequence of
@@ -282,12 +270,12 @@ void eval(State *state, const Byte *code, const Byte *data) {
     // Grow the stream by writing a Null character.
     writeByteArray(&state->stream, '\0');
 
-    // Set PP to point at the first value in the prompt.
-    state->pp = &state->prompt.values[0];
-    // Set IP to point at the first instruction.
-    state->ip = &state->instructions.values[0];
-    // Set SP to point at the first value on the stream.
-    state->sp = &state->stream.values[0];
+    // Set prompt pointer to point at the first value in the prompt.
+    state->prompt.pointer = &state->prompt.values[0];
+    // Set instructions pointer to point at the first instruction.
+    state->instructions.pointer = &state->instructions.values[0];
+    // Set stream pointer to point at the first value on the stream.
+    state->stream.pointer = &state->stream.values[0];
 
     // If there are mismatched parens.
     if (state->parens != 0) {
@@ -322,41 +310,45 @@ void eval(State *state, const Byte *code, const Byte *data) {
     // Run time.
     //
     // At this phase we run validated instructions evaluating them into a response. Effectively
-    // manipulating the stream and altering state.
+    // manipulating the stream and writing a response.
 
     // Run isntructions, stop at the NULL character.
-    while (*state->ip != '\0') {
+    while (*state->instructions.pointer != '\0') {
 #if DEBUG >= 1
         debugPrintInstructions(state);
 #endif
 
         // Run the current instruction.
-        switch (*state->ip) {
+        switch (*state->instructions.pointer) {
             // Increment the value at the stream pointer.
             case '+': {
                 // Ensure that the value wraps around to zero after reaching its maximum.
-                *state->sp = (*state->sp + 1) & VALUE_MAX;
+                //
+                // TODO: Consider ensuring at the dynamic array implementation level.
+                *state->stream.pointer = (*state->stream.pointer + 1) & VALUE_MAX;
                 break;
             }
             // Decrement the value at the stream pointer.
             case '-': {
                 // Ensure that the value wraps around to its maximum after reaching zero.
-                *state->sp = (*state->sp - 1) & VALUE_MAX;
+                //
+                // TODO: Consider ensuring at the dynamic array implementation level.
+                *state->stream.pointer = (*state->stream.pointer - 1) & VALUE_MAX;
                 break;
             }
             // Move the stream pointer to the next value.
             case '>': {
-                // Increment the stream counter.
-                state->spc++;
+                // Increment the stream index.
+                state->stream.index++;
 
                 // If we moved outside the stream.
-                if (state->stream.count <= state->spc) {
+                if (state->stream.count <= state->stream.index) {
                     // If we reached the maximum stream count.
                     //
-                    // TODO: Consider limiting at the dynamic array implementation level.
-                    if (state->spc > ARRAY_COUNT_MAX) {
-                        // Decrement the stream counter.
-                        state->spc--;
+                    // TODO: Consider checking at the dynamic array implementation level.
+                    if (state->stream.index > ARRAY_COUNT_MAX) {
+                        // Decrement the stream index.
+                        state->stream.index--;
 
                         // Error.
                         state->result = RESULT_ARRAY_OVERFLOW;
@@ -368,18 +360,20 @@ void eval(State *state, const Byte *code, const Byte *data) {
                 }
 
                 // Move the stream pointer forward on the stream.
-                state->sp++;
+                state->stream.pointer++;
                 break;
             }
             // Move the stream pointer to the previous value.
             case '<': {
-                // Decrement the stream counter.
-                state->spc--;
+                // Decrement the stream index.
+                state->stream.index--;
 
                 // If we moved outside the stream.
-                if (0 > state->spc) {
-                    // Set the stream counter back to zero.
-                    state->spc = 0;
+                //
+                // TODO: Consider checking at the dynamic array implementation level.
+                if (0 > state->stream.index) {
+                    // Set the stream index back to zero.
+                    state->stream.index = 0;
 
                     // Error.
                     state->result = RESULT_ARRAY_UNDERFLOW;
@@ -387,12 +381,12 @@ void eval(State *state, const Byte *code, const Byte *data) {
                 }
 
                 // Move the stream pointer backward on the stream.
-                state->sp--;
+                state->stream.pointer--;
                 break;
             }
             // Write the value at the stream pointer into the response array.
             case '.': {
-                writeByteArray(&state->response, *state->sp);
+                writeByteArray(&state->response, *state->stream.pointer);
 
 #if DEBUG >= 1
                 debugPrintResponse(state);
@@ -402,42 +396,42 @@ void eval(State *state, const Byte *code, const Byte *data) {
             }
             // Set the value at the stream pointer to the value at the prompt pointer.
             case ',': {
-                *state->sp = *state->pp;
-                // Increment the prompt counter.
-                state->ppc++;
+                *state->stream.pointer = *state->prompt.pointer;
+                // Increment the prompt index.
+                state->prompt.index++;
                 // Move the prompt pointer forward.
-                state->pp++;
+                state->prompt.pointer++;
                 break;
             }
             // Jumps to the matching ].
             case '[': {
                 // If the value at the stream pointer is zero.
-                if (*state->sp == 0) {
-                    // Increment the instructions counter.
-                    state->ipc++;
+                if (*state->stream.pointer == 0) {
+                    // Increment the instructions index.
+                    state->instructions.index++;
                     // Move the instructions pointer forward past the ] instruction.
-                    state->ip++;
+                    state->instructions.pointer++;
 
                     // Increment the bracket counter.
                     state->brackets++;
                     // Move the instructions pointer forward while the brackets counter is not zero.
                     while (state->brackets != 0) {
                         // If the current instruction is a [.
-                        if (*state->ip == '[') {
+                        if (*state->instructions.pointer == '[') {
                             // Increment the bracket counter.
                             state->brackets++;
                         }
 
                         // If the current instruction is a ].
-                        if (*state->ip == ']') {
+                        if (*state->instructions.pointer == ']') {
                             // Decrement the bracket counter.
                             state->brackets--;
                         }
 
-                        // Increment the instructions counter.
-                        state->ipc++;
+                        // Increment the instructions index.
+                        state->instructions.index++;
                         // Move the instructions pointer forward.
-                        state->ip++;
+                        state->instructions.pointer++;
                     }
                 }
                 break;
@@ -445,11 +439,11 @@ void eval(State *state, const Byte *code, const Byte *data) {
             // Jumps to the matching [.
             case ']': {
                 // If the value at the stream pointer is not zero.
-                if (*state->sp != 0) {
-                    // Decrement the instructions counter.
-                    state->ipc--;
+                if (*state->stream.pointer != 0) {
+                    // Decrement the instructions index.
+                    state->instructions.index--;
                     // Move the instructions pointer backward before the [ instruction.
-                    state->ip--;
+                    state->instructions.pointer--;
 
                     // Increment the bracket counter.
                     state->brackets++;
@@ -457,21 +451,21 @@ void eval(State *state, const Byte *code, const Byte *data) {
                     // zero.
                     while (state->brackets != 0) {
                         // If the current instruction is a ].
-                        if (*state->ip == ']') {
+                        if (*state->instructions.pointer == ']') {
                             // Increment the bracket counter.
                             state->brackets++;
                         }
 
                         // If the current instruction is a [.
-                        if (*state->ip == '[') {
+                        if (*state->instructions.pointer == '[') {
                             // Decrement the bracket counter.
                             state->brackets--;
                         }
 
-                        // Decrement the instructions counter.
-                        state->ipc--;
+                        // Decrement the instructions index.
+                        state->instructions.index--;
                         // Move the instructions pointer backward.
-                        state->ip--;
+                        state->instructions.pointer--;
                     }
                 }
                 break;
@@ -482,10 +476,10 @@ void eval(State *state, const Byte *code, const Byte *data) {
         debugPrintStream(state);
 #endif
 
-        // Increment the instructions counter.
-        state->ipc++;
+        // Increment the instructions index.
+        state->instructions.index++;
         // Move the instructions pointer to the next instruction.
-        state->ip++;
+        state->instructions.pointer++;
     }
 
     // Terminate the response array by writing a NULL character.

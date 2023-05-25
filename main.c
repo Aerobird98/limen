@@ -3,8 +3,8 @@
 #include "limen.h"
 
 int main(int argc, const char *argv[]) {
-    // Define exit code as EX_OK: Successful evaluation.
-    int ex = 0;
+    // Declare exit code.
+    int ex;
 
     // Declare user code and data.
     const Byte *code;
@@ -48,15 +48,16 @@ int main(int argc, const char *argv[]) {
     // Check result, visualize response, report errors and set exit code based on what happened.
     switch (state.result) {
         case RESULT_OK: {
-            // Visualize state.
+            // Visualize stream.
             for (int i = 0; i < state.stream.count; i++) {
-                if (i == state.spc) {
-                    fprintf(stderr, "[*%i]", state.stream.values[i]);
+                if (i == state.stream.index) {
+                    fprintf(stdout, "[*%i]", state.stream.values[i]);
                 } else {
-                    fprintf(stderr, "[%i]", state.stream.values[i]);
+                    fprintf(stdout, "[%i]", state.stream.values[i]);
                 }
             }
-            fprintf(stderr, "\n");
+            fprintf(stdout, "\n");
+            // Visualize response.
             fprintf(stdout, "%s\n", state.response.values);
             // Set exit code to EX_OK: Successful evaluation.
             ex = 0;
@@ -104,6 +105,11 @@ int main(int argc, const char *argv[]) {
             ex = 69;
             break;
         }
+        default:
+            fprintf(stderr, "Error: Unhandled error.\n");
+            // Set exit code to EX_UNAVAILABLE:  Something did not work and do not know why.
+            ex = 69;
+            break;
     }
 
     // Free state.
