@@ -1,3 +1,6 @@
 *.o
 limen
 limen.exe
+
+/.vscode
+/build

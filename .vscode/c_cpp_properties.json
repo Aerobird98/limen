@@ -4,7 +4,7 @@
       "name": "Win32",
       "includePath": ["${workspaceFolder}/**", "${workspaceFolder}"],
       "defines": [],
-      "compilerPath": "C:\\Program Files\\CodeBlocks\\MinGW\\bin\\gcc.exe",
+      "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
       "cStandard": "c99",
       "cppStandard": "c++98",
       "intelliSenseMode": "gcc-x64"

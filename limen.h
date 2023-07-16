@@ -56,7 +56,7 @@ typedef enum eResult {
                              // below zero.
     RESULT_NOT_ENOUGH_MEMORY,  // Not enough memory. TODO: Not used. Use it!
     RESULT_UNKNOWN,            // Something went wrong and do not know why.
-    RESULT_MAX,
+    RESULT_MAX,                // Used to track the size of the enum.
 } Result;
 
 #if DEBUG >= 1
